@@ -827,7 +827,7 @@ function renderFC(){
   const dfc=dfcM();let H='';const pre='fcs';
   H+=saldoLinha('fcs','si','Saldo inicial','saldo_inicial');
   H+=linhaEntradaAjustada();
-  H+=fcSection(pre,'entradas','(+) Entrada ajustada',['1.']);
+  H+=fcSection(pre,'entradas','(+) Recebimentos',['1.']);
   H+=fcSection(pre,'custos','(–) Custos',['2.1']);
   H+=fcSection(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
   H+=fcSection(pre,'investimentos','(–) Investimentos',['2.7','3.0']);
@@ -857,7 +857,7 @@ function renderFCMatrix(){
   const months=D.months;const pre='fcm';let H=matrixHead()+'<tbody>';
   H+=saldoLinhaM('fcm','si','Saldo inicial','saldo_inicial','first');
   H+=linhaEntradaAjustadaM();
-  H+=fcSectionM(pre,'entradas','(+) Entrada ajustada',['1.']);
+  H+=fcSectionM(pre,'entradas','(+) Recebimentos',['1.']);
   H+=fcSectionM(pre,'custos','(–) Custos',['2.1']);
   H+=fcSectionM(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
   H+=fcSectionM(pre,'investimentos','(–) Investimentos',['2.7','3.0']);
