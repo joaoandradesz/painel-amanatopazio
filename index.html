@@ -564,6 +564,8 @@ function round2(v){return Math.round(v*100)/100;}
 /* Itens que existem economicamente mas nao aparecem no resultado do periodo.
    Numeros fixos, apurados na conciliacao — nao saem da base do painel. */
 const FORA=[
+ {t:'Receita de hospedagem operada e não reconhecida ⚠',v:872921.24,
+  q:'Confronto entre a receita implícita na operação (noites vendidas × ticket médio, do relatório comercial) e a receita efetivamente faturada pela Amana. Concentrado em março (−261.040) e abril (−294.386), os dois meses de maior prejuízo. O dinheiro entrou — o caixa desses meses foi R$ 464.958 e R$ 423.024 — mas ficou parado em Adiantamento de Hospedagem, sem virar receita. É estimativa por ocupação × ADR, não apuração: confirmar reserva a reserva contra o Erbon. Se confirmada e reconhecida, o resultado do grupo melhora cerca de R$ 759 mil líquidos de imposto.'},
  {t:'Imposto sobre o faturamento não emitido da Topázio',v:94897.20,
   q:'A Topázio recebeu R$ 711.373,34 da Amana entre maio e julho e faturou R$ 15.810,04. A operação aconteceu; a nota não foi emitida. Aplicando a carga média de jan–abr (13,34%), este é o imposto que fica devido quando o faturamento for reconhecido.'},
  {t:'Capex do bangalô não localizado no Omie',v:186545.00,
