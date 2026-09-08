@@ -566,10 +566,12 @@ function round2(v){return Math.round(v*100)/100;}
 const FORA=[
  {t:'Imposto sobre o faturamento não emitido da Topázio',v:94897.20,
   q:'A Topázio recebeu R$ 711.373,34 da Amana entre maio e julho e faturou R$ 15.810,04. A operação aconteceu; a nota não foi emitida. Aplicando a carga média de jan–abr (13,34%), este é o imposto que fica devido quando o faturamento for reconhecido.'},
- {t:'Capex do bangalô fora do sistema',v:186545.00,
-  q:'Linha "Total Renato — valor pago direto" da aba Gastos Bangalô do controle gerencial. Não existe registro em nenhuma das duas empresas: nem o ativo, nem o caixa que pagou. A confirmar com o controller.'},
+ {t:'Capex do bangalô não localizado no Omie',v:186545.00,
+  q:'Linha "Total Renato — valor pago direto" da aba Gastos Bangalô do controle gerencial. Varredura completa por fornecedor e observação nos 2.591 títulos a pagar da Amana e nos 2.914 da Topázio: não localizado em nenhuma das duas. Não sabemos se foi pago — sabemos que não está registrado. A confirmar com o controller.'},
  {t:'Amortização de empréstimo classificada como investimento',v:213776.24,
   q:'PIX único à PEAK Sociedade de Empréstimo entre Pessoas em 13/02, hoje na linha de Investimentos da Amana. Amortização de principal não é investimento nem despesa — é redução de passivo. Só os juros seriam despesa financeira. O empréstimo em si nunca foi registrado no Omie.'},
+ {t:'Passivo de financiamento nunca registrado',v:492327.17,
+  q:'BNB R$ 233.409,45 (73 parcelas a vencer, até 2029) e Receita Federal R$ 258.917,72 (188 parcelas, até 09/2036), ambos contratados pela Topázio. As amortizações entram como custo dentro da linha de Arrendamento; a entrada do principal nunca foi registrada. Mesmo padrão da PEAK na Amana. O balanço do grupo está subdimensionado no passivo e o resultado, inflado na despesa.'},
  {t:'Agosto/2026',v:null,
   q:'Fora do painel. O mês não fechou e o Omie não provisiona impostos, comissões, FGTS, INSS, 13º nem férias.'},
 ];
