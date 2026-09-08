@@ -472,7 +472,6 @@ section{padding:52px 0}
 
 <div class="wrap"><div class="kpis" id="kpis"></div></div>
 <div class="wrap"><div class="aviso" id="avisoDefasagem"></div></div>
-<div class="wrap"><div class="alerta" id="foraDoResultado"></div></div>
 
 <section id="tend" class="sec-alt"><div class="wrap">
   <div class="sec-head"><div class="k">O ano de 2026</div><h2>Como cada mês <span class="light">se comportou</span></h2>
@@ -564,47 +563,9 @@ function grupoTot(pref){let s=0;Object.values(dreM()).forEach(gs=>Object.entries
 function compParts(){const lb=tipoTot('1.'),desp=tipoTot('2.'),inv=tipoTot('3.');const custos=grupoTot('21');return {rl:round2(lb-custos),custos:round2(custos),lb:round2(lb),desp:round2(desp),inv:round2(inv),res:E().dre_result[MES]||0};}
 function round2(v){return Math.round(v*100)/100;}
 
-/* Itens que existem economicamente mas nao aparecem no resultado do periodo.
-   Numeros fixos, apurados na conciliacao — nao saem da base do painel. */
-/* Aviso de defasagem: a base da Topazio mudou depois do export que
-   alimenta este painel. Fica visivel ate a proxima regeracao. */
-const DEFASAGEM={
-  data:'08/09/2026',
-  txt:'<b>Atualizado em 08/09 com a base corrente das duas empresas.</b> A DRE da Topázio incorpora as 720 reclassificações, as 8 categorias que mudaram de linha e as 7 que passaram a receber. O fluxo de caixa é apurado pelo movimento bancário: o saldo de cada conta corrente fecha ao centavo com o extrato nos sete meses, nas duas empresas.'
-};
-const FORA=[
- {t:'Receita de hospedagem operada e não reconhecida ⚠',v:872921.24,
-  q:'Confronto entre a receita implícita na operação (noites vendidas × ticket médio, do relatório comercial) e a receita efetivamente faturada pela Amana. Concentrado em março (−261.040) e abril (−294.386), os dois meses de maior prejuízo. O dinheiro entrou — o caixa desses meses foi R$ 464.958 e R$ 423.024 — mas ficou parado em Adiantamento de Hospedagem, sem virar receita. É estimativa por ocupação × ADR, não apuração: confirmar reserva a reserva contra o Erbon. Se confirmada e reconhecida, o resultado do grupo melhora cerca de R$ 759 mil líquidos de imposto.'},
- {t:'Imposto que ficará devido no faturamento intercompany de mai–jul',v:94897.20,
-  q:'Não é erro de apuração: o DAS de maio a julho da Topázio está correto para a receita registrada, que é praticamente zero. O ponto é que ela recebeu R$ 711.373,34 da Amana nesses meses e não faturou. Quando esse faturamento for reconhecido, o imposto vem junto — pela carga média de jan–abr, 13,34%.'},
- {t:'DAS provisionado indevidamente em agosto na Topázio',v:38850.00,
-  q:'R$ 39.099,29 de DAS lançados em agosto sobre faturamento de serviços igual a zero — alíquota de 658%. É o valor de março clonado, com observação "PREVISÃO", replicado para agosto e setembro. Agosto está com cerca de R$ 38.850 de despesa a mais. Mais uma razão para agosto ficar fora do relatório até fechar.'},
- {t:'DAS pago sobre faturamento interno — custo da estrutura de dois CNPJs',v:154940.72,
-  q:'As duas empresas são optantes do Simples. Cada real que a Topázio fatura à Amana paga DAS na origem e de novo na revenda ao hóspede. Em jan–abr, 92% a 99% do DAS da Topázio incidiu sobre faturamento interno. Não é erro contábil: é o custo tributário do arranjo, e entra na conta de qualquer regra de preço de transferência.'},
- {t:'Capex do bangalô não localizado no Omie',v:186545.00,
-  q:'Linha "Total Renato — valor pago direto" da aba Gastos Bangalô do controle gerencial. Varredura completa por fornecedor e observação nos 2.591 títulos a pagar da Amana e nos 2.914 da Topázio: não localizado em nenhuma das duas. Não sabemos se foi pago — sabemos que não está registrado. A confirmar com o controller.'},
- {t:'Amortização de empréstimo classificada como investimento',v:213776.24,
-  q:'PIX único à PEAK Sociedade de Empréstimo entre Pessoas em 13/02, hoje na linha de Investimentos da Amana. Amortização de principal não é investimento nem despesa — é redução de passivo. Só os juros seriam despesa financeira. O empréstimo em si nunca foi registrado no Omie.'},
- {t:'Passivo de financiamento nunca registrado',v:492327.17,
-  q:'BNB R$ 233.409,45 (73 parcelas a vencer, até 2029) e Receita Federal R$ 258.917,72 (188 parcelas, até 09/2036), ambos contratados pela Topázio. As amortizações entram como custo dentro da linha de Arrendamento; a entrada do principal nunca foi registrada. Mesmo padrão da PEAK na Amana. O balanço do grupo está subdimensionado no passivo e o resultado, inflado na despesa.'},
- {t:'Agosto/2026',v:null,
-  q:'Fora do painel. O mês não fechou e o Omie não provisiona impostos, comissões, FGTS, INSS, 13º nem férias.'},
-];
-function renderFora(){
-  const av=document.getElementById('avisoDefasagem');
-  if(av&&DEFASAGEM) av.innerHTML=`<b>Sobre a atualização dos dados</b> · ${DEFASAGEM.txt}`;
-  const el=document.getElementById('foraDoResultado'); if(!el) return;
-  const linhas=FORA.map(x=>`<tr><td>${x.t}</td><td class="q">${x.q}</td><td class="v">${x.v==null?'—':fmt(x.v)}</td></tr>`).join('');
-  const tot=FORA.reduce((a,x)=>a+(x.v||0),0);
-  el.innerHTML=`<h4>Fora do resultado — o que este painel ainda não mostra</h4>
-   <div class="sub">Valores conhecidos que não estão na DRE nem no fluxo de caixa do período. Não são erro do painel: são pendências de registro na fonte. Ficam aqui para não serem esquecidos no fechamento.</div>
-   <table>${linhas}<tr class="tot"><td>Total identificado</td><td class="q"></td><td class="v">${fmt(tot)}</td></tr></table>`;
-}
 
 /* Eliminacao de consolidacao: a Amana compra diarias da Topazio, e a Topazio
-   registra a venda. E o mesmo dinheiro. Somar os dois lados infla receita e
-   custo do grupo pelo mesmo valor — o resultado nao muda, mas as linhas mentem.
-   Tirar so um dos lados melhoraria o resultado artificialmente. */
+   registra a venda. E o mesmo dinheiro. */
 function notaElim(){
   if(CUR!=='consol') return '';
   const E2=D.elim_ic||{};const m=(MES==='T')?null:MES;
@@ -612,7 +573,7 @@ function notaElim(){
   const r=m?((E2[m]||{}).rec||0):soma('rec');
   const c=m?((E2[m]||{}).cus||0):soma('cus');
   if(!r && !c) return '';
-  return ` <b>Eliminação de consolidação:</b> foram excluídos ${fmt(r)} de receita da Topázio e ${fmt(Math.abs(c))} de custo da Amana, que são o mesmo dinheiro — o repasse pela compra de diárias. Somados nos dois lados, inflariam receita e custo do grupo em valor idêntico. <b>O resultado é o mesmo com ou sem a eliminação</b>; tirar apenas um dos lados melhoraria o resultado em ${fmt(Math.abs(c))} sem que nada tivesse mudado no negócio. Nas visões Amana e Topázio isoladas as duas linhas continuam, porque ali são transação real entre CNPJs distintos.`;
+  return ` <b>Eliminação de consolidação:</b> foram excluídos ${fmt(r)} de receita da Topázio e ${fmt(Math.abs(c))} de custo da Amana, que são o mesmo dinheiro — o repasse pela compra de diárias. Somados nos dois lados, inflariam receita e custo do grupo em valor idêntico. <b>O resultado é o mesmo com ou sem a eliminação.</b> Nas visões Amana e Topázio isoladas as duas linhas continuam, porque ali são transação real entre CNPJs distintos.`;
 }
 function renderKpis(){
   const P=isT();let k;
@@ -816,37 +777,8 @@ function dreCascade(mk){
    lancamentos de controle (adiantamento/reversao de hospedagem e acertos de
    competencia). E o dinheiro que de fato entrou pela porta. */
 function entAjust(mk){const d=E().dfc[mk]||{};return round2(Object.values(d.receitas||{}).reduce((a,g)=>a+g.total,0));}
-/* Ponte entre a entrada que sai do Omie e a que este painel mostra.
-   Cada abatimento e uma coisa que entrou no relatorio mas nao entrou pela porta. */
-function pnt(mk){const P=(D.ponte_ent||{})[mk];
-  if(!P){const ms=D.months.map(String);const a={rev:0,ace:0,ic:0};
-    ms.forEach(m=>{const q=(D.ponte_ent||{})[m];if(q){a.rev+=q.rev;a.ace+=q.ace;a.ic+=q.ic;}});return a;}
-  return P;}
-function pnteLinhas(){
-  const so=CUR==='consol';const P=pnt(MES);const aj=entAjust(MES);
-  const bruta=aj+P.rev+P.ace+(so?P.ic:0);
-  let H=`<tr class="x-comp lvl0"><td>Entrada bruta <span class="sub2">como sai do relatório do Omie</span></td><td class="v">${fmt(bruta)}</td><td class="c"></td></tr>`;
-  H+=`<tr class="x-catrow noclick"><td>(–) Reversão de adiantamento de hospedagem <span class="sub2">lançamento de controle, não é caixa</span></td><td class="v neg">${fmt(-P.rev)}</td><td class="c"></td></tr>`;
-  if(P.ace) H+=`<tr class="x-catrow noclick"><td>(–) Lançamentos de acerto de competência <span class="sub2">entrada e saída de mesmo valor, mesma data</span></td><td class="v neg">${fmt(-P.ace)}</td><td class="c"></td></tr>`;
-  if(so) H+=`<tr class="x-catrow noclick"><td>(–) Intercompany Amana ⇄ Topázio <span class="sub2">repasse interno, eliminado no consolidado</span></td><td class="v neg">${fmt(-P.ic)}</td><td class="c"></td></tr>`;
-  H+=`<tr class="x-saldo"><td>= Entrada ajustada <span class="sub2">o que entrou pela porta</span></td><td class="v">${fmt(aj)}</td><td class="c"></td></tr>`;
-  return H;
-}
-function linhaEntradaAjustada(){return pnteLinhas();}
-function linhaEntradaAjustadaM(){
-  const so=CUR==='consol';const months=D.months;
-  const aj=months.map(m=>entAjust(String(m)));
-  const P=months.map(m=>pnt(String(m)));
-  const bruta=months.map((m,i)=>aj[i]+P[i].rev+P[i].ace+(so?P[i].ic:0));
-  const S=a=>a.reduce((x,v)=>x+v,0);
-  const row=(cls,lab,arr,neg)=>`<tr class="${cls}"><td class="l">${lab}</td>${arr.map(v=>cellTd(neg?-v:v,null,null,false)).join('')}<td class="tt">${fmt(neg?-S(arr):S(arr))}</td></tr>`;
-  let H=row('r1','Entrada bruta (relatório do Omie)',bruta);
-  H+=row('r3','(–) Reversão de adiantamento de hospedagem',P.map(x=>x.rev),true);
-  if(P.some(x=>x.ace)) H+=row('r3','(–) Lançamentos de acerto de competência',P.map(x=>x.ace),true);
-  if(so) H+=row('r3','(–) Intercompany Amana ⇄ Topázio',P.map(x=>x.ic),true);
-  H+=row('r0','= Entrada ajustada',aj);
-  return H;
-}
+function linhaEntradaAjustada(){return "";}
+function linhaEntradaAjustadaM(){return "";}
 
 const SUBS=()=>CUR==='consol'?['amana','topazio']:[];
 const CK=k=>k==='saldo_inicial'?'si':'sf';
@@ -895,7 +827,7 @@ function renderFC(){
   const dfc=dfcM();let H='';const pre='fcs';
   H+=saldoLinha('fcs','si','Saldo inicial','saldo_inicial');
   H+=linhaEntradaAjustada();
-  H+=fcSection(pre,'entradas','Composição da entrada ajustada',['1.']);
+  H+=fcSection(pre,'entradas','(+) Entrada ajustada',['1.']);
   H+=fcSection(pre,'custos','(–) Custos',['2.1']);
   H+=fcSection(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
   H+=fcSection(pre,'investimentos','(–) Investimentos',['2.7','3.0']);
@@ -925,7 +857,7 @@ function renderFCMatrix(){
   const months=D.months;const pre='fcm';let H=matrixHead()+'<tbody>';
   H+=saldoLinhaM('fcm','si','Saldo inicial','saldo_inicial','first');
   H+=linhaEntradaAjustadaM();
-  H+=fcSectionM(pre,'entradas','Composição da entrada ajustada',['1.']);
+  H+=fcSectionM(pre,'entradas','(+) Entrada ajustada',['1.']);
   H+=fcSectionM(pre,'custos','(–) Custos',['2.1']);
   H+=fcSectionM(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
   H+=fcSectionM(pre,'investimentos','(–) Investimentos',['2.7','3.0']);
@@ -1093,7 +1025,7 @@ function renderCom(){
   bar((D.canal||{}).ocupacao||{},'com-canal-o');
 }
 
-function renderAll(){renderFora();renderHero();renderPills();document.querySelectorAll('#regsw button').forEach(b=>b.classList.toggle('on',b.dataset.r===REGIME));renderTrend();renderMonth();}
+function renderAll(){renderHero();renderPills();document.querySelectorAll('#regsw button').forEach(b=>b.classList.toggle('on',b.dataset.r===REGIME));renderTrend();renderMonth();}
 const secs=[...document.querySelectorAll('section[id],header[id]')];const links=[...document.querySelectorAll('.nav-links a')];
 function spy(){let cur=secs[0].id;const y=scrollY+90;secs.forEach(s=>{if(s.offsetTop<=y)cur=s.id});links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));}
 addEventListener('scroll',spy);
