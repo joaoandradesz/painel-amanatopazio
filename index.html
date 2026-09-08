@@ -255,6 +255,8 @@ section{padding:52px 0}
 .x-saldosub td{background:#F3F5F8;font-weight:600;color:#374151;padding-left:22px}
 .x-saldosub td.l{padding-left:26px}
 
+.aviso{margin:20px 0 0;border-left:3px solid #C0392B;background:#FDF0EE;border-radius:8px;padding:13px 16px;font-size:12px;line-height:1.6;color:#6B2318}
+.aviso b{color:#A02D1C}
 .alerta{margin:22px 0 6px;border:1px solid #E7C9A9;background:#FDF6EE;border-radius:12px;padding:18px 20px}
 .alerta h4{margin:0 0 4px;font-size:13.5px;font-weight:800;color:#8A4B12;letter-spacing:.01em}
 .alerta .sub{font-size:11.5px;color:#8A7A66;margin-bottom:14px;line-height:1.5}
@@ -469,6 +471,7 @@ section{padding:52px 0}
 </div></header>
 
 <div class="wrap"><div class="kpis" id="kpis"></div></div>
+<div class="wrap"><div class="aviso" id="avisoDefasagem"></div></div>
 <div class="wrap"><div class="alerta" id="foraDoResultado"></div></div>
 
 <section id="tend" class="sec-alt"><div class="wrap">
@@ -563,6 +566,12 @@ function round2(v){return Math.round(v*100)/100;}
 
 /* Itens que existem economicamente mas nao aparecem no resultado do periodo.
    Numeros fixos, apurados na conciliacao — nao saem da base do painel. */
+/* Aviso de defasagem: a base da Topazio mudou depois do export que
+   alimenta este painel. Fica visivel ate a proxima regeracao. */
+const DEFASAGEM={
+  data:'08/09/2026',
+  txt:'Os dados da <b>Topázio</b> neste painel vêm do export de 07/09 e a base foi alterada depois disso: 720 lançamentos mudaram de categoria, 8 categorias mudaram de linha na DRE, 7 categorias novas passaram a receber (R$ 336.159,65) e 8 antigas foram zeradas (R$ 401.668,02). <b>O resultado total da Topázio é próximo, mas a composição por linha está desatualizada.</b> A visão Amana está em dia. Regenerar assim que houver novo export das duas empresas.'
+};
 const FORA=[
  {t:'Receita de hospedagem operada e não reconhecida ⚠',v:872921.24,
   q:'Confronto entre a receita implícita na operação (noites vendidas × ticket médio, do relatório comercial) e a receita efetivamente faturada pela Amana. Concentrado em março (−261.040) e abril (−294.386), os dois meses de maior prejuízo. O dinheiro entrou — o caixa desses meses foi R$ 464.958 e R$ 423.024 — mas ficou parado em Adiantamento de Hospedagem, sem virar receita. É estimativa por ocupação × ADR, não apuração: confirmar reserva a reserva contra o Erbon. Se confirmada e reconhecida, o resultado do grupo melhora cerca de R$ 759 mil líquidos de imposto.'},
@@ -582,6 +591,8 @@ const FORA=[
   q:'Fora do painel. O mês não fechou e o Omie não provisiona impostos, comissões, FGTS, INSS, 13º nem férias.'},
 ];
 function renderFora(){
+  const av=document.getElementById('avisoDefasagem');
+  if(av&&DEFASAGEM) av.innerHTML=`<b>⚠ Base da Topázio desatualizada</b> · ${DEFASAGEM.txt}`;
   const el=document.getElementById('foraDoResultado'); if(!el) return;
   const linhas=FORA.map(x=>`<tr><td>${x.t}</td><td class="q">${x.q}</td><td class="v">${x.v==null?'—':fmt(x.v)}</td></tr>`).join('');
   const tot=FORA.reduce((a,x)=>a+(x.v||0),0);
