@@ -474,6 +474,9 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 .kpi-exp.open .ct-box{display:block}
 .ct-l{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0;opacity:.85}
 .ct-l b{font-weight:600;white-space:nowrap}
+
+.embreve{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;background:rgba(148,163,184,.16);color:#94a3b8;vertical-align:middle}
 </style></head><body>
 
 <nav class="nav"><div class="wrap">
@@ -537,10 +540,7 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 <section id="relatorios"><div class="wrap">
   <div class="sec-head"><div class="k">Relatório detalhado</div><h2 id="repH">Tabelas por categoria <span class="light">— com abertura de lançamentos</span></h2>
     <p class="lede">Relatório claro, no estilo planilha. Clique em qualquer categoria para abrir a caixa com os lançamentos dela.</p></div>
-  <div class="flowgrid2" style="margin-bottom:26px">
-    <div class="panel acqpanel"><div class="ph"><span class="tt">Por onde o dinheiro entrou</span></div><p class="psub" id="acqSub">Recebimentos operacionais por conta / adquirente.</p><div id="acqbars"></div></div>
-    <div class="panel"><div class="ph"><span class="tt" id="resumoTitle">Resumo do mês</span></div><p class="psub">Números da visão selecionada.</p><div id="miniSummary"></div></div>
-  </div>
+  <!-- caixas "Por onde o dinheiro entrou" e "Resumo do periodo" retiradas -->
   <div class="rep-switch"><button onclick="setRegime('caixa')">Fluxo de Caixa (DFC)</button><button class="on" onclick="setRegime('competencia')">DRE (competência)</button></div>
   <div id="rep-fc" class="repwrap"><table class="xtbl fc"><thead><tr><th class="l" id="fcHead">Demonstrativo do caixa</th><th>Valor</th><th class="c">Lançtos</th></tr></thead><tbody id="fcbody"></tbody></table><div id="fcMatrix"></div><p class="repnote" id="fcNote"></p></div>
   <div id="rep-dre" class="repwrap on"><table class="xtbl dre"><thead><tr><th class="l" id="dreHead">Categoria</th><th>Valor</th></tr></thead><tbody id="drebody"></tbody></table><div id="dreMatrix"></div><p class="repnote" id="dreNote"></p></div>
@@ -802,13 +802,9 @@ function renderBridge(){
     <div class="bconn">↔</div>
     <div class="bnode" style="border-color:rgba(249,115,22,.5)"><div class="bl" style="color:#F97316">Resultado Caixa · DFC</div><div class="bv" style="color:#fff">${short(caixa)}</div><div class="bd">realizado no mês</div></div>`;
 }
-function renderAcqSummary(){
-  try{document.getElementById('resumoTitle').textContent=isT()?'Resumo do período':'Resumo do mês';document.getElementById('acqSub').textContent='Recebimentos operacionais por conta / adquirente '+(isT()?'no período.':'no mês.');}catch(e){}
-  const acq=E().acq[MES]||{};const A=Object.entries(acq).map(([k,v])=>[k.replace(/_Top_[\d-]+/,'').replace(/\s*\(Inativo\)/,''),v]).filter(([k,v])=>v>40).slice(0,9);
-  const mx=Math.max(...A.map(a=>a[1]),1);
-  document.getElementById('acqbars').innerHTML=A.map(([k,v])=>`<div style="margin:11px 0"><div class="bar-lbl"><span style="font-weight:500">${k}</span><span style="font-weight:600">${fmt(v)}</span></div><div style="height:8px;background:var(--g200);border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:${v/mx*100}%;background:var(--navy);border-radius:5px"></i></div></div>`).join('')||'<p class="psub">Sem recebimentos operacionais relevantes por adquirente neste mês.</p>';
-  const dfc=dfcM();const rows=[['Saldo inicial',dfc.saldo_inicial],['Entradas',sumG(dfc,'receitas')],['Saídas',sumG(dfc,'despesas')],['Geração de caixa',dfc.resultado],['Saldo final',dfc.acumulado],['Resultado DRE (competência)',E().dre_result[MES]||0]];
-  document.getElementById('miniSummary').innerHTML=`<table class="miniTable">${rows.map(r=>`<tr><td class="c">${r[0]}</td><td class="v ${r[0].includes('DRE')||r[0].includes('Geração')?NC(r[1]):''}">${fmt(r[1])}</td></tr>`).join('')}</table>`;
+function renderAcqSummary(){   // caixas retiradas; sai sem fazer nada
+  const bars=document.getElementById('acqbars'), mini=document.getElementById('miniSummary');
+  if(!bars||!mini) return;
 }
 /* report tables */
 function setRegime(r){REGIME=r;
@@ -1172,7 +1168,8 @@ function renderCom(){
     ['Taxa de ocupação',f(k.oc,2)+'%','oc',1],['Ticket médio',m(k.tkt),'tkt',1],['RevPar',m(k.revpar),'revpar',1],
     ['Hóspedes',f(k.hosp),'hosp',1],['Noites ocupadas',f(k.noites),'noites',1],['Estadia média',f(k.est,2)+' noites','est',1],
     ['Reservas',f(k.res),'res',1],['Taxa de cancelamento',(k.res!=null&&k.canc!=null&&(k.res+k.canc)>0)?f(k.canc/(k.res+k.canc)*100,1)+'%':'—','canc',-1],
-    ['Venda direta + site',vendaDireta(),'',0]
+    ['Venda direta + site',vendaDireta(),'',0],
+    ['LOS','<span class="embreve">em breve</span>','',0]
   ].map(([t,v,key,dir])=>`<div class="kpi"><div class="kpi-l">${t}</div><div class="kpi-v">${v}${tend(key,dir)}</div></div>`).join('');
   const cn=document.getElementById('com-note');
   if(cn){const meses=D.months.map(String);const ult=D.mes_labels[meses[meses.length-1]];const pen=D.mes_labels[meses[meses.length-2]];
