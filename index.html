@@ -496,7 +496,7 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 <nav class="nav"><div class="wrap">
   <img id="navlogo" alt="Exact BR">
   <div class="nav-links">
-    <a href="#geral" class="on">Visão geral</a><a href="#tend">Ano</a><a href="#mov">Movimento</a><a href="#ponte">DRE × Caixa</a><a href="#comercial">Comercial</a><a href="#relatorios">Relatórios</a>
+    <a href="#geral" class="on">Visão geral</a><a href="#tend">Ano</a><a href="#pizza">Saídas</a><a href="#ponte">DRE × Caixa</a><a href="#comercial">Comercial</a><a href="#relatorios">Relatórios</a>
   </div>
   <div class="entsw" id="entsw">
     <button data-ent="amana" class="on" onclick="setEntity('amana')">Amana</button>
@@ -533,6 +533,15 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 <!-- secao "De onde veio e para onde foi" retirada a pedido do controller -->
 
 
+<section id="pizza" class="sec-alt"><div class="wrap">
+  <div class="sec-head"><div class="k">Para onde foi</div><h2>Composição <span class="light">das saídas</span></h2>
+    <p class="lede">Todas as saídas do período, agrupadas. Passe o mouse para ver o valor; a lista ao lado traz o percentual sobre o total.</p></div>
+  <div class="pz-grid">
+    <div class="pz-chart"><svg id="pzSvg" viewBox="0 0 320 320"></svg><div class="pz-mid"><span class="pz-t">total</span><b id="pzTot"></b></div></div>
+    <div class="pz-leg" id="pzLeg"></div>
+  </div>
+</div></section>
+
 <section id="ponte" class="sec-alt"><div class="wrap">
   <div class="bridge"><div class="bk" id="brK">A leitura do mês</div>
     <h3 id="brTitle"></h3><p class="bsub" id="brSub"></p>
@@ -562,14 +571,7 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 </div></section>
 
 
-<section id="pizza" class="sec-alt"><div class="wrap">
-  <div class="sec-head"><div class="k">Para onde foi</div><h2>Composição <span class="light">das saídas</span></h2>
-    <p class="lede">Todas as saídas do período, agrupadas. Passe o mouse para ver o valor; a lista ao lado traz o percentual sobre o total.</p></div>
-  <div class="pz-grid">
-    <div class="pz-chart"><svg id="pzSvg" viewBox="0 0 320 320"></svg><div class="pz-mid"><span class="pz-t">total</span><b id="pzTot"></b></div></div>
-    <div class="pz-leg" id="pzLeg"></div>
-  </div>
-</div></section>
+
 
 <footer class="foot"><div class="wrap"><div class="fg">
   <div><img id="footlogo" alt="Exact BR" style="margin-bottom:14px"><div class="sig">João Victor Andrade de Souza</div><div class="r">Sócio-fundador · Exact BR</div></div>
