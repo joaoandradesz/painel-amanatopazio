@@ -477,6 +477,20 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 
 .embreve{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
   padding:3px 9px;border-radius:999px;background:rgba(148,163,184,.16);color:#94a3b8;vertical-align:middle}
+
+.pz-grid{display:grid;grid-template-columns:340px 1fr;gap:30px;align-items:center}
+@media(max-width:900px){.pz-grid{grid-template-columns:1fr}}
+.pz-chart{position:relative;width:320px;max-width:100%;margin:0 auto}
+.pz-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.pz-mid .pz-t{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.pz-mid b{font-family:'Plus Jakarta Sans';font-size:20px;font-weight:700}
+.pz-leg{display:grid;grid-template-columns:1fr 1fr;gap:2px 22px}
+@media(max-width:700px){.pz-leg{grid-template-columns:1fr}}
+.pz-i{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:12.5px;border-bottom:1px solid rgba(148,163,184,.14)}
+.pz-i .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.pz-i .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pz-i .vl{font-weight:600;white-space:nowrap}
+.pz-i .pc{opacity:.6;font-size:11.5px;width:46px;text-align:right;white-space:nowrap}
 </style></head><body>
 
 <nav class="nav"><div class="wrap">
@@ -547,6 +561,15 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
   <div class="qa" id="qa"></div>
 </div></section>
 
+
+<section id="pizza" class="sec-alt"><div class="wrap">
+  <div class="sec-head"><div class="k">Para onde foi</div><h2>Composição <span class="light">das saídas</span></h2>
+    <p class="lede">Todas as saídas do período, agrupadas. Passe o mouse para ver o valor; a lista ao lado traz o percentual sobre o total.</p></div>
+  <div class="pz-grid">
+    <div class="pz-chart"><svg id="pzSvg" viewBox="0 0 320 320"></svg><div class="pz-mid"><span class="pz-t">total</span><b id="pzTot"></b></div></div>
+    <div class="pz-leg" id="pzLeg"></div>
+  </div>
+</div></section>
 
 <footer class="foot"><div class="wrap"><div class="fg">
   <div><img id="footlogo" alt="Exact BR" style="margin-bottom:14px"><div class="sig">João Victor Andrade de Souza</div><div class="r">Sócio-fundador · Exact BR</div></div>
@@ -915,10 +938,10 @@ function compRow(pre,b,label,cats,cols){
 }
 function dreCascade(mk){
   const B=dreBuckets(mk);const g=b=>(B[b]||{total:0,cats:{}});
-  const receita=g('receita').total,deducoes=g('deducoes').total,custos=g('custos').total,pessoaldir=g('pessoaldir').total,comercial=g('comercial').total,admin=g('admin').total,pessoal=g('pessoal').total,recfin=g('recfin').total,despfin=g('despfin').total,inv=g('investimentos').total,naoop=g('naoop').total;
-  const rl=receita+deducoes,lb=rl+custos+pessoaldir,ebitda=lb+comercial+admin+pessoal,ebit=ebitda,resfin=recfin+despfin,lair=ebit+resfin,ll=lair,res=ll+inv+naoop;
+  const receita=g('receita').total,deducoes=g('deducoes').total,custos=g('custos').total,pessoaldir=g('pessoaldir').total,comercial=g('comercial').total,admin=g('admin').total,pessoal=g('pessoal').total,recfin=g('recfin').total,despfin=g('despfin').total,inv=g('investimentos').total,naoop=g('naoop').total,emprestimo=g('emprestimo').total,recnaoop=g('recnaoop').total;
+  const rl=receita+deducoes,lb=rl+custos+pessoaldir,ebitda=lb+comercial+admin+pessoal,ebit=ebitda,resfin=recfin+despfin,lair=ebit+resfin,ll=lair,res=ll+inv+naoop+emprestimo+recnaoop;
   const resfinCats=Object.assign({},g('recfin').cats,g('despfin').cats);
-  return {B,receita,deducoes,custos,pessoaldir,comercial,admin,pessoal,recfin,despfin,inv,naoop,rl,lb,ebitda,ebit,resfin,lair,ll,res,resfinCats};
+  return {B,receita,deducoes,custos,pessoaldir,comercial,admin,pessoal,recfin,despfin,inv,naoop,emprestimo,recnaoop,rl,lb,ebitda,ebit,resfin,lair,ll,res,resfinCats};
 }
 
 /* ===== DFC (estrutura por seções) ===== */
@@ -1111,12 +1134,60 @@ function renderDREMatrix(){
   H+=compM('emprestimo','(\u2013) Empr\u00e9stimo (pgto de principal)');
   H+=compM('recnaoop','(+) Receita n\u00e3o operacional');
   H+=compM('naoop','(±) Não operacional');
-  H+=mrowS('res','= Resultado após investimentos e não operacional',arrSum(...BASE,'investimentos','naoop'),totSum(...BASE,'investimentos','naoop'));
+  H+=mrowS('res','= Resultado após investimentos e não operacional',arrSum(...BASE,'investimentos','emprestimo','recnaoop','naoop'),totSum(...BASE,'investimentos','emprestimo','recnaoop','naoop'));
   H+='</tbody>';
   document.getElementById('dreMatrix').innerHTML=`<div class="xmwrap"><table class="xmatrix cents">${H}</table></div>`;
 }
 
-function renderMonth(){renderKpis();renderWaterfall();renderFlows();renderBridge();renderAcqSummary();renderCom();
+
+const PZ_CORES=['#0E9F6E','#F97316','#3B82F6','#8B5CF6','#EF4444','#14B8A6','#F59E0B','#6366F1',
+                '#DC2626','#059669','#7C3AED','#0891B2','#D97706','#BE123C','#4F46E5','#65A30D','#9333EA'];
+function pzGrupo(t,g,co,cat){
+  if(/Taxa de cart/i.test(cat)) return 'Taxa de cartão';
+  if(/empr[ée]stimos? e financiamentos?/i.test(cat)) return 'Outros não operacionais';
+  if(/^aporte|rendimentos aplica/i.test(cat)) return null;              // entrada
+  if(RE_NAOOP.test(cat)||/Não operacional/i.test(co)) return 'Outros não operacionais';
+  if(t.trim().startsWith('3.')) return 'Investimentos';
+  if(/Receita Bruta/i.test(co)) return null;                            // entrada
+  if(/Deduç/i.test(co)||/Outros Tributos/i.test(co)) return 'Impostos e tributos';
+  if(/Receitas Financeiras|Outras Receitas|Recupera/i.test(co)) return null;
+  if(/^Prestadores OIA/i.test(cat)) return 'Prestadores de serviço OIA';
+  const M={'01. Arrendamento':'Arrendamento','02. Insumos de café da manhã':'Insumos do café da manhã',
+    '03. Fretes':'Fretes','04. Pessoal direto':'Pessoal direto',
+    '05. Pessoal indireto da operação':'Pessoal indireto da operação','07. Lavanderia':'Lavanderia',
+    '08. Água e esgoto':'Água e esgoto','09. Energia':'Energia','11. Insumos para revenda':'Insumos para revenda',
+    '13. Manutenção':'Manutenção','01. Despesas com Pessoal':'Pessoal administrativo',
+    '02. Despesa Indireta de Pessoal Indireto':'Pessoal administrativo'};
+  return M[co.trim()]||'Diversos operacionais';
+}
+function renderPizza(){
+  const svg=document.getElementById('pzSvg'); if(!svg) return;
+  const ms=(MES==='T')?D.months.map(String):[MES];
+  const ag={};
+  ms.forEach(m=>{const arv=(E().dre||{})[m]||{};
+    for(const t in arv) for(const g in arv[t]) for(const co in arv[t][g]) arv[t][g][co].forEach(x=>{
+      const k=pzGrupo(t,g,co,x.cat); if(!k) return;
+      if(x.v>=0) return;                                                // so saida
+      ag[k]=(ag[k]||0)+Math.abs(x.v);});});
+  const its=Object.entries(ag).filter(([k,v])=>v>.5).sort((a,b)=>b[1]-a[1]);
+  const tot=its.reduce((a,b)=>a+b[1],0);
+  if(!tot){svg.innerHTML='';document.getElementById('pzLeg').innerHTML='<p class="psub">Sem saídas no período.</p>';return;}
+  const cx=160,cy=160,R=140,r=86; let ang=-Math.PI/2,H='';
+  its.forEach(([k,v],i)=>{
+    const a2=ang+(v/tot)*Math.PI*2, big=(a2-ang)>Math.PI?1:0, c=PZ_CORES[i%PZ_CORES.length];
+    const x1=cx+R*Math.cos(ang),y1=cy+R*Math.sin(ang),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
+    const x3=cx+r*Math.cos(a2),y3=cy+r*Math.sin(a2),x4=cx+r*Math.cos(ang),y4=cy+r*Math.sin(ang);
+    H+=`<path d="M${x1} ${y1} A${R} ${R} 0 ${big} 1 ${x2} ${y2} L${x3} ${y3} A${r} ${r} 0 ${big} 0 ${x4} ${y4} Z" fill="${c}" stroke="var(--bg,#fff)" stroke-width="1.5"><title>${k}: ${fmt(v)} (${(v/tot*100).toFixed(1)}%)</title></path>`;
+    ang=a2;});
+  svg.innerHTML=H;
+  document.getElementById('pzTot').textContent=short(-tot);
+  document.getElementById('pzLeg').innerHTML=its.map(([k,v],i)=>
+    `<div class="pz-i"><span class="sw" style="background:${PZ_CORES[i%PZ_CORES.length]}"></span>
+     <span class="nm">${k}</span><span class="vl">${fmt(v)}</span>
+     <span class="pc">${(v/tot*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</span></div>`).join('');
+}
+
+function renderMonth(){renderKpis();renderPizza();renderWaterfall();renderFlows();renderBridge();renderAcqSummary();renderCom();
   const fc=REGIME==='caixa';document.querySelectorAll('.rep-switch button').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.rep-switch button')[fc?0:1].classList.add('on');document.getElementById('rep-fc').classList.toggle('on',fc);document.getElementById('rep-dre').classList.toggle('on',!fc);
   renderFC();renderDRE();spy();}
 
@@ -1169,7 +1240,8 @@ function renderCom(){
     ['Hóspedes',f(k.hosp),'hosp',1],['Noites ocupadas',f(k.noites),'noites',1],['Estadia média',f(k.est,2)+' noites','est',1],
     ['Reservas',f(k.res),'res',1],['Taxa de cancelamento',(k.res!=null&&k.canc!=null&&(k.res+k.canc)>0)?f(k.canc/(k.res+k.canc)*100,1)+'%':'—','canc',-1],
     ['Venda direta + site',vendaDireta(),'',0],
-    ['LOS','<span class="embreve">em breve</span>','',0]
+    ['LOS','<span class="embreve">em breve</span>','',0],
+    ['NPS','<span class="embreve">em breve</span>','',0]
   ].map(([t,v,key,dir])=>`<div class="kpi"><div class="kpi-l">${t}</div><div class="kpi-v">${v}${tend(key,dir)}</div></div>`).join('');
   const cn=document.getElementById('com-note');
   if(cn){const meses=D.months.map(String);const ult=D.mes_labels[meses[meses.length-1]];const pen=D.mes_labels[meses[meses.length-2]];
