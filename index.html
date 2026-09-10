@@ -1141,7 +1141,7 @@ function renderDREMatrix(){
 
 
 const PZ_CORES=['#0E9F6E','#F97316','#3B82F6','#8B5CF6','#EF4444','#14B8A6','#F59E0B','#6366F1',
-                '#DC2626','#059669','#7C3AED','#0891B2','#D97706','#BE123C','#4F46E5','#65A30D','#9333EA'];
+                '#DC2626','#059669','#7C3AED','#0891B2','#D97706','#BE123C','#4F46E5','#65A30D','#9333EA','#0284C7'];
 function pzGrupo(t,g,co,cat){
   if(/Taxa de cart/i.test(cat)) return 'Taxa de cartão';
   if(/empr[ée]stimos? e financiamentos?/i.test(cat)) return 'Outros não operacionais';
@@ -1152,6 +1152,7 @@ function pzGrupo(t,g,co,cat){
   if(/Deduç/i.test(co)||/Outros Tributos/i.test(co)) return 'Impostos e tributos';
   if(/Receitas Financeiras|Outras Receitas|Recupera/i.test(co)) return null;
   if(/^Prestadores OIA/i.test(cat)) return 'Prestadores de serviço OIA';
+  if(/Vendas e Marketing/i.test(co)) return 'Despesas comerciais';   // comissoes, pontuacao e premiacao
   const M={'01. Arrendamento':'Arrendamento','02. Insumos de café da manhã':'Insumos do café da manhã',
     '03. Fretes':'Fretes','04. Pessoal direto':'Pessoal direto',
     '05. Pessoal indireto da operação':'Pessoal indireto da operação','07. Lavanderia':'Lavanderia',
