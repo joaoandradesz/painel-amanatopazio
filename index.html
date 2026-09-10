@@ -504,6 +504,9 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
 .pz-tip b{display:block;font-size:12.5px;font-weight:600;margin-bottom:3px}
 .pz-tip span{display:block;font-family:'Plus Jakarta Sans';font-size:17px;font-weight:700}
 .pz-tip i{display:block;font-style:normal;font-size:11.5px;opacity:.65;margin-top:2px}
+
+body.socios .rsm-wrap,body.socios .rsm-nota{display:none}
+body.socios .xm-comp,body.socios .x-comp{cursor:default}
 </style></head><body>
 
 <nav class="nav"><div class="wrap">
@@ -515,6 +518,7 @@ table.rsm .up{color:#0E9F6E}table.rsm .dn{color:#DC2626}table.rsm .fl{color:#9ca
     <button data-ent="amana" class="on" onclick="setEntity('amana')">Amana</button>
     <button data-ent="topazio" onclick="setEntity('topazio')">Topázio</button>
     <button data-ent="consol" onclick="setEntity('consol')">Consolidado</button>
+    <button data-ent="socios" onclick="setEntity('socios')">Sócios</button>
   </div>
 </div></nav>
 
@@ -616,7 +620,15 @@ document.getElementById('footlogo').src='data:image/png;base64,'+D.logo_white;
 const sumG=(dfc,sec)=>Object.values(dfc[sec]||{}).reduce((a,g)=>a+g.total,0);
 const clabel=()=>CUR==='consol'?'Consolidado':(CUR==='amana'?'Amana':'Topázio');
 
-function setEntity(ent){CUR=ent;document.querySelectorAll('#entsw button').forEach(b=>b.classList.toggle('on',b.dataset.ent===ent));renderAll();}
+let SOCIOS=false;
+function setEntity(ent){
+  SOCIOS=(ent==='socios');            // visao de socios: consolidado, sem abrir categoria
+  CUR=SOCIOS?'consol':ent;
+  document.querySelectorAll('#entsw button').forEach(b=>b.classList.toggle('on',b.dataset.ent===ent));
+  document.body.classList.toggle('socios',SOCIOS);
+  const tend=document.getElementById('tend'); if(tend) tend.style.display=SOCIOS?'none':'';
+  renderAll();
+}
 function setMonth(m){MES=String(m);document.querySelectorAll('#mespills button').forEach(b=>b.classList.toggle('on',b.dataset.m===MES));renderMonth();}
 
 function renderPills(){
@@ -945,6 +957,7 @@ function compRow(pre,b,label,cats,cols){
   const entries=Object.entries(cats).filter(([n,v])=>Math.abs(v)>.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
   const tot=Object.values(cats).reduce((a,v)=>a+v,0);const has=entries.length>0;
   if(!has && Math.abs(tot)<.4) return '';   // linha sem movimento no periodo nao entra
+  if(SOCIOS) return `<tr class="x-comp"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${cols>2?'<td class="c"></td>':''}</tr>`;
   let H=`<tr class="x-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td><span class="chv ${has?'':'none'}">▸</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${cols>2?'<td class="c"></td>':''}</tr>`;
   entries.forEach(([cn,v])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,true).filter(t=>Math.abs(t.v)>.004);const ck=tx.length>0;
     H+=`<tr class="x-catrow grp-${pre}-${b} gh ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(v)}">${fmt(v)}</td>${cols>2?`<td class="c">${tx.length||'—'}</td>`:''}</tr>`;
@@ -1117,6 +1130,11 @@ function renderDREMatrix(){
     const contas=Object.entries(d.contas||{}).filter(([n,q])=>Math.abs(q.total)>.4).sort((a,b)=>Math.abs(b[1].total)-Math.abs(a[1].total));
     const has=contas.length>0;
     const totArr=months.map((m,i)=>(Bm[i][b]||{total:0}).total);
+    if(SOCIOS){
+      return `<tr class="xm-comp"><td class="l"><span class="chv none"></span>${label}</td>`
+        +totArr.map(v=>cellTd(v,null,null)).join('')
+        +`<td class="tt ${d.total<0?'neg':''}">${fmt(d.total)}</td></tr>`;
+    }
     let s=`<tr class="xm-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td class="l"><span class="chv ${has?'':'none'}">▸</span>${label}</td>${totArr.map(v=>cellTd(v,null,null)).join('')}<td class="tt ${d.total<0?'neg':''}">${fmt(d.total)}</td></tr>`;
     contas.forEach(([co,q],ci)=>{
       const G=pre+'-'+b+'-c'+ci;
