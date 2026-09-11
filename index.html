@@ -520,6 +520,20 @@ table.orc td.sem{color:var(--g400);font-style:italic}
 .orc-pill.bom{background:rgba(14,159,110,.12);color:var(--in)}
 .orc-pill.ruim{background:rgba(220,38,38,.10);color:var(--out)}
 .orc-pill.na{background:#f4f5f7;color:var(--g400)}
+.orc-sw{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.orc-sw .lab{font-family:'Plus Jakarta Sans';font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);font-weight:600;margin-right:2px}
+.orc-sw .lab.sep{margin-left:14px;padding-left:14px;border-left:1px solid var(--g200)}
+.orc-sw button{font-family:'Plus Jakarta Sans';font-weight:600;font-size:12px;border:1px solid var(--g200);background:#fff;color:var(--g500);padding:7px 13px;border-radius:8px;cursor:pointer;transition:.12s}
+.orc-sw button:hover{color:var(--ink);border-color:var(--g300)}
+.orc-sw button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+table.orc .pc{display:block;font-size:10.5px;color:var(--g500);font-weight:500;margin-top:1px}
+table.orc td.av,table.orc th.av{padding-left:2px;padding-right:12px;color:var(--g500);font-size:12px}
+table.orc td.av .pc{display:inline;font-size:12px}
+table.orc.orc-mx{min-width:1040px;font-size:12.5px}
+table.orc.orc-mx td,table.orc.orc-mx th{padding:9px 10px}
+table.orc.orc-mx td.tt{background:#f4f5f7;font-weight:700}
+table.orc.orc-mx tr.tot td.tt{background:#ffedd5}
+table.orc .orc-d .pc{color:inherit;opacity:.7}
 .orc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:4px 0 22px}
 .orc-card{border:1px solid var(--g200);border-radius:14px;padding:16px 17px 15px;background:var(--card);box-shadow:var(--shadow)}
 .orc-card .t{font-family:'Plus Jakarta Sans';font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);font-weight:600}
@@ -1252,27 +1266,96 @@ const ORC_GRUPOS=[
   ['Despesas',['01. Despesas com Pessoal','02. Despesa Indireta de Pessoal Indireto','03. Despesas Administrativas',
      '04. Despesas de Vendas e Marketing','05. Despesas Financeiras','05. Outros Tributos']],
 ];
-function orcMeses(){return MES==='T'?D.months.map(n=>n-1):[(+MES)-1];}
-function orcOrcado(linha){const a=(D.orc.linhas||{})[linha];if(!a)return null;
-  return round2(orcMeses().reduce((t,i)=>t+(a[i]||0),0));}
-function orcRealizado(){                      // por linha, so a fatia acima do EBITDA
-  const R={},ms=MES==='T'?D.months.map(String):[MES];
-  ms.forEach(mk=>walkTree(E().dre[mk]||{},(t,g,c,cat,v)=>{
+/* ---- estado da secao -------------------------------------------------- */
+let ORCMODO='acum';      // 'acum' = periodo inteiro | 'mes' = matriz mes a mes
+let ORCCEL='var';        // no modo mes: o que a celula mostra
+function setOrcModo(m){ORCMODO=m;renderOrc();}
+function setOrcCel(c){ORCCEL=c;renderOrc();}
+/* ---- series ----------------------------------------------------------- */
+function orcIdx(){return MES==='T'?D.months.map(n=>n-1):[(+MES)-1];}
+function orcTemO(l){return !!(D.orc.linhas||{})[l];}
+function orcSerieO(l){const a=(D.orc.linhas||{})[l];return D.months.map(n=>a?round2(a[n-1]||0):0);}
+function orcSerieR(){const R={};
+  D.months.map(String).forEach((mk,i)=>walkTree(E().dre[mk]||{},(t,g,c,cat,v)=>{
     if(ORC_EB.indexOf(dbucket(t,g,c,cat))<0)return;
-    R[c]=round2((R[c]||0)+v);}));
+    if(!R[c])R[c]=D.months.map(()=>0);
+    R[c][i]=round2(R[c][i]+v);}));
   return R;}
-function orcLinha(nome,orc,real){
-  const temO=orc!==null&&Math.abs(orc)>0.005;
-  const d=temO?round2(real-orc):null;
-  // receita: mais e melhor. custo/despesa (negativos): menos saida e melhor.
-  const bom=d===null?null:d>=0;   // custo entra negativo: d>=0 sempre significa a favor
-  const pc=temO?(d/Math.abs(orc)*100):null;
-  const cls=d===null?'na':(Math.abs(pc)<3?'na':(bom?'bom':'ruim'));
-  return '<tr><td class="l">'+nome.replace(/^\d+\.\s*/,'')+'</td>'+
-    '<td'+(temO?'':' class="sem"')+'>'+(temO?fmt(orc):'sem orçamento')+'</td>'+
-    '<td>'+fmt(real)+'</td>'+
-    '<td class="orc-d '+cls+'">'+(d===null?'—':(d>0?'+':'')+fmt(d))+'</td>'+
-    '<td>'+(pc===null?'<span class="orc-pill na">—</span>':'<span class="orc-pill '+cls+'">'+(pc>0?'+':'')+pc.toFixed(0)+'%</span>')+'</td></tr>';}
+const orcSoma=(s,ix)=>round2(ix.reduce((t,i)=>t+(s[i]||0),0));
+/* ---- formatacao ------------------------------------------------------- */
+const orcAV=(v,rb)=>rb?'<span class="pc">'+(v/rb*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%</span>':'';
+function orcCls(d,orc){                       // custo entra negativo: d>=0 e sempre a favor
+  if(d===null)return 'na';
+  const pc=Math.abs(orc)>0.005?Math.abs(d/orc*100):100;
+  return pc<3?'na':(d>=0?'bom':'ruim');}
+const orcPill=(d,orc)=>{
+  if(d===null)return '<span class="orc-pill na">—</span>';
+  const pc=Math.abs(orc)>0.005?(d/Math.abs(orc)*100):null;
+  return pc===null?'<span class="orc-pill na">—</span>'
+    :'<span class="orc-pill '+orcCls(d,orc)+'">'+(pc>0?'+':'')+pc.toFixed(0)+'%</span>';};
+/* ---- linhas visiveis (pula o que nao tem nem orcado nem realizado) ----- */
+function orcLinhas(SO,SR,ix){
+  const out=[];
+  ORC_GRUPOS.forEach(([titulo,linhas])=>{
+    const vis=linhas.filter(n=>{
+      const o=orcTemO(n)?orcSoma(SO[n],ix):null, r=orcSoma(SR[n]||D.months.map(()=>0),ix);
+      return !(o===null&&Math.abs(r)<0.005);});
+    if(vis.length)out.push([titulo,vis]);});
+  return out;}
+/* ---- modo 1: periodo inteiro ------------------------------------------ */
+function orcTabelaAcum(SO,SR,ix,rbO,rbR){
+  let corpo='',so=0,sr=0;
+  orcLinhas(SO,SR,ix).forEach(([titulo,linhas])=>{
+    corpo+='<tr class="grp"><td colspan="7">'+titulo+'</td></tr>';
+    linhas.forEach(n=>{
+      const tem=orcTemO(n), o=tem?orcSoma(SO[n],ix):null, r=orcSoma(SR[n]||D.months.map(()=>0),ix);
+      const d=(o===null||Math.abs(o)<0.005)?null:round2(r-o);
+      so+=(o||0);sr+=r;
+      corpo+='<tr><td class="l">'+n.replace(/^\d+\.\s*/,'')+'</td>'
+        +'<td'+(tem?'':' class="sem"')+'>'+(tem?fmt(o):'sem orçamento')+'</td>'
+        +'<td class="av">'+(tem?orcAV(o,rbO):'')+'</td>'
+        +'<td>'+fmt(r)+'</td>'
+        +'<td class="av">'+orcAV(r,rbR)+'</td>'
+        +'<td class="orc-d '+orcCls(d,o||0)+'">'+(d===null?'—':(d>0?'+':'')+fmt(d))+'</td>'
+        +'<td>'+orcPill(d,o||0)+'</td></tr>';});});
+  const d=round2(sr-so);
+  corpo+='<tr class="tot"><td class="l">EBITDA</td><td>'+fmt(so)+'</td><td class="av">'+orcAV(so,rbO)+'</td>'
+    +'<td>'+fmt(sr)+'</td><td class="av">'+orcAV(sr,rbR)+'</td>'
+    +'<td class="orc-d '+(d>=0?'bom':'ruim')+'">'+(d>0?'+':'')+fmt(d)+'</td><td>'+orcPill(d,so)+'</td></tr>';
+  return '<table class="orc"><thead><tr><th class="l">Linha</th>'
+    +'<th>Orçado</th><th class="av">AV</th><th>Realizado</th><th class="av">AV</th>'
+    +'<th>Variação</th><th>%</th></tr></thead><tbody>'+corpo+'</tbody></table>';}
+/* ---- modo 2: matriz mes a mes ----------------------------------------- */
+function orcTabelaMes(SO,SR,rbOs,rbRs){
+  const ms=D.months, todos=ms.map((_,i)=>i);
+  const celula=(o,r,i,tem)=>{
+    if(ORCCEL==='orc')return tem?'<td>'+fmt(o)+orcAV(o,rbOs[i])+'</td>':'<td class="sem">—</td>';
+    if(ORCCEL==='real')return '<td>'+fmt(r)+orcAV(r,rbRs[i])+'</td>';
+    if(!tem)return '<td class="sem">—</td>';
+    const d=round2(r-o);
+    return '<td class="orc-d '+orcCls(d,o)+'">'+(d>0?'+':'')+fmt(d)
+      +(Math.abs(o)>0.005?'<span class="pc">'+(d/Math.abs(o)*100>0?'+':'')+(d/Math.abs(o)*100).toFixed(0)+'%</span>':'')+'</td>';};
+  let corpo='',TO=ms.map(()=>0),TR=ms.map(()=>0);
+  orcLinhas(SO,SR,todos).forEach(([titulo,linhas])=>{
+    corpo+='<tr class="grp"><td colspan="'+(ms.length+2)+'">'+titulo+'</td></tr>';
+    linhas.forEach(n=>{
+      const tem=orcTemO(n), so=SO[n]||ms.map(()=>0), sr=SR[n]||ms.map(()=>0);
+      ms.forEach((_,i)=>{TO[i]+=(tem?so[i]:0);TR[i]+=sr[i];});
+      const o=orcSoma(so,todos), r=orcSoma(sr,todos), d=tem?round2(r-o):null;
+      corpo+='<tr><td class="l">'+n.replace(/^\d+\.\s*/,'')+'</td>'
+        +ms.map((_,i)=>celula(tem?so[i]:0,sr[i],i,tem)).join('')
+        +'<td class="tt">'+(ORCCEL==='orc'?(tem?fmt(o):'—'):ORCCEL==='real'?fmt(r)
+            :(d===null?'—':'<span class="orc-d '+orcCls(d,o)+'">'+(d>0?'+':'')+fmt(d)+'</span>'))+'</td></tr>';});});
+  const dT=ms.map((_,i)=>round2(TR[i]-TO[i]));
+  const soT=orcSoma(TO,todos), srT=orcSoma(TR,todos), dTot=round2(srT-soT);
+  corpo+='<tr class="tot"><td class="l">EBITDA</td>'
+    +ms.map((_,i)=>ORCCEL==='orc'?'<td>'+fmt(TO[i])+'</td>':ORCCEL==='real'?'<td>'+fmt(TR[i])+'</td>'
+        :'<td class="orc-d '+(dT[i]>=0?'bom':'ruim')+'">'+(dT[i]>0?'+':'')+fmt(dT[i])+'</td>').join('')
+    +'<td class="tt">'+(ORCCEL==='orc'?fmt(soT):ORCCEL==='real'?fmt(srT)
+        :'<span class="orc-d '+(dTot>=0?'bom':'ruim')+'">'+(dTot>0?'+':'')+fmt(dTot)+'</span>')+'</td></tr>';
+  return '<table class="orc orc-mx"><thead><tr><th class="l">Linha</th>'
+    +ms.map(m=>'<th>'+(D.mes_labels[m]||m)+'</th>').join('')+'<th>Total</th></tr></thead><tbody>'+corpo+'</tbody></table>';}
+/* ---- render ------------------------------------------------------------ */
 function renderOrc(){
   const box=document.getElementById('orcBody');if(!box||!D.orc)return;
   if(CUR!=='consol'){
@@ -1280,33 +1363,43 @@ function renderOrc(){
       'as diárias que a Amana vende e as que a Topázio fatura estão no mesmo número. '+
       'Por isso ele só se compara com o <b>Consolidado</b>. Troque a visão no topo para ver o confronto.</div>';
     return;}
-  const real=orcRealizado();
-  let so=0,sr=0,sem=0,corpo='';
-  ORC_GRUPOS.forEach(([titulo,linhas])=>{
-    corpo+='<tr class="grp"><td colspan="5">'+titulo+'</td></tr>';
-    linhas.forEach(n=>{const o=orcOrcado(n),r=real[n]||0;
-      if(o===null&&Math.abs(r)<0.005)return;
-      if(o===null||Math.abs(o)<0.005)sem+=r;
-      so+=(o||0);sr+=r;corpo+=orcLinha(n,o,r);});});
-  const d=round2(sr-so),pc=Math.abs(so)>0.005?(d/Math.abs(so)*100):null;
-  corpo+='<tr class="tot"><td class="l">EBITDA</td><td>'+fmt(so)+'</td><td>'+fmt(sr)+'</td>'+
-    '<td class="orc-d '+(d>=0?'bom':'ruim')+'">'+(d>0?'+':'')+fmt(d)+'</td>'+
-    '<td>'+(pc===null?'—':'<span class="orc-pill '+(d>=0?'bom':'ruim')+'">'+(pc>0?'+':'')+pc.toFixed(0)+'%</span>')+'</td></tr>';
-  const rb=real['01. Receita Bruta de Vendas']||0, rbo=orcOrcado('01. Receita Bruta de Vendas')||0;
+  const SR=orcSerieR(), SO={};
+  ORC_GRUPOS.forEach(([,ls])=>ls.forEach(n=>{SO[n]=orcSerieO(n);}));
+  const RB='01. Receita Bruta de Vendas';
+  const rbOs=SO[RB]||D.months.map(()=>0), rbRs=SR[RB]||D.months.map(()=>0);
+  const ix=orcIdx(), todos=D.months.map((_,i)=>i);
+  const usa=ORCMODO==='mes'?todos:ix;
+  const rbO=orcSoma(rbOs,usa), rbR=orcSoma(rbRs,usa);
+  // totais do periodo em exibicao, para os cartoes
+  let so=0,sr=0,sem=0;
+  orcLinhas(SO,SR,usa).forEach(([,ls])=>ls.forEach(n=>{
+    const tem=orcTemO(n), o=tem?orcSoma(SO[n],usa):0, r=orcSoma(SR[n]||D.months.map(()=>0),usa);
+    if(!tem||Math.abs(o)<0.005)sem+=r; so+=o; sr+=r;}));
+  const d=round2(sr-so), sinal=v=>(v>0?'+':'')+fmt(v);
   const card=(t,v,s2)=>'<div class="orc-card"><div class="t">'+t+'</div><div class="v">'+v+'</div><div class="s">'+s2+'</div></div>';
-  const sinal=v=>(v>0?'+':'')+fmt(v);
-  box.innerHTML='<div class="orc-cards">'+
-     card('Receita — '+periodMes(),fmt(rb),'orçado '+fmt(rbo)+' · '+sinal(round2(rb-rbo)))+
-     card('EBITDA realizado',fmt(sr),'orçado Base '+fmt(so)+' · '+sinal(d))+
-     card('Gasto sem orçamento',fmt(sem),'linhas que existem aqui e não no orçamento')+
-     card('Margem EBITDA',(rb?(sr/rb*100).toFixed(1):'0')+'%','orçada '+(rbo?(so/rbo*100).toFixed(1):'0')+'%')+
-     '</div>'+
-     '<div class="orc-wrap"><table class="orc"><thead><tr><th class="l">Linha</th><th>Orçado</th><th>Realizado</th><th>Variação</th><th>%</th></tr></thead><tbody>'+corpo+'</tbody></table></div>'+
-     '<p class="orc-nota"><b>Leitura.</b> Verde é a favor do resultado: receita acima do orçado, ou saída abaixo. '+
-     'O orçamento para no EBITDA — ele mesmo diz «antes de despesas não operacionais», então investimento, '+
-     'empréstimo e pagamento indevido ficam de fora dos dois lados. '+
-     '<b>Linhas sem orçamento</b> existem na nossa estrutura e não no dele: são gasto real que o orçamento não previu. '+
-     '<b>Fonte:</b> '+D.orc.fonte+'. A planilha traz ainda um bloco resumido, com um cenário Base próprio (EBITDA R$ 186.955 no período) e um cenário Meta (R$ 342.717). Esse bloco parte de outra receita e de outras premissas de custo — diverge do detalhado em R$ 123 mil — e não se abre por conta, '+'então não serve de base para comparação linha a linha. O confronto acima usa o bloco detalhado.</p>';}
+  const bt=(cur,val,fn,rot)=>'<button class="'+(cur===val?'on':'')+'" onclick="'+fn+'(\''+val+'\')">'+rot+'</button>';
+  const per=ORCMODO==='mes'?'Jan–Jul':periodMes();
+  const barra='<div class="orc-sw"><span class="lab">Ver:</span>'
+    +bt(ORCMODO,'acum','setOrcModo','Período inteiro')+bt(ORCMODO,'mes','setOrcModo','Mês a mês')
+    +(ORCMODO==='mes'?'<span class="lab sep">Célula:</span>'
+        +bt(ORCCEL,'var','setOrcCel','Variação')+bt(ORCCEL,'real','setOrcCel','Realizado')+bt(ORCCEL,'orc','setOrcCel','Orçado')
+      :'')+'</div>';
+  box.innerHTML='<div class="orc-cards">'
+     +card('Receita — '+per,fmt(rbR),'orçado '+fmt(rbO)+' · '+sinal(round2(rbR-rbO)))
+     +card('EBITDA realizado',fmt(sr),'orçado '+fmt(so)+' · '+sinal(d))
+     +card('Gasto sem orçamento',fmt(sem),'linhas que existem aqui e não no orçamento')
+     +card('Margem EBITDA',(rbR?(sr/rbR*100).toFixed(1):'0')+'%','orçada '+(rbO?(so/rbO*100).toFixed(1):'0')+'%')
+     +'</div>'+barra
+     +'<div class="orc-wrap">'+(ORCMODO==='mes'?orcTabelaMes(SO,SR,rbOs,rbRs):orcTabelaAcum(SO,SR,ix,rbO,rbR))+'</div>'
+     +'<p class="orc-nota"><b>Leitura.</b> Verde é a favor do resultado: receita acima do orçado, ou saída abaixo. '
+     +'O <b>AV</b> é a análise vertical sobre a receita bruta — do orçamento na coluna orçada, do realizado na coluna realizada. '
+     +'No modo mês a mês o percentual embaixo do número acompanha a célula escolhida. '
+     +'O orçamento para no EBITDA — ele mesmo diz «antes de despesas não operacionais», então investimento, '
+     +'empréstimo e pagamento indevido ficam de fora dos dois lados. '
+     +'<b>Linhas sem orçamento</b> existem na nossa estrutura e não no dele: são gasto real que o orçamento não previu. '
+     +'<b>Fonte:</b> '+D.orc.fonte+'. A planilha traz ainda um bloco resumido, com um cenário Base próprio (EBITDA R$ 186.955 no período) '
+     +'e um cenário Meta (R$ 342.717). Esse bloco parte de outra receita e de outras premissas de custo — diverge do detalhado em '
+     +'R$ 123 mil — e não se abre por conta, então não serve de base para comparação linha a linha. O confronto acima usa o bloco detalhado.</p>';}
 function renderPizza(){
   const svg=document.getElementById('pzSvg'); if(!svg) return;
   const ms=(MES==='T')?D.months.map(String):[MES];
