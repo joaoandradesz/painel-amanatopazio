@@ -534,6 +534,11 @@ table.orc.orc-mx td,table.orc.orc-mx th{padding:9px 10px}
 table.orc.orc-mx td.tt{background:#f4f5f7;font-weight:700}
 table.orc.orc-mx tr.tot td.tt{background:#ffedd5}
 table.orc .orc-d .pc{color:inherit;opacity:.7}
+table.orc.orc-lado{min-width:1560px}
+table.orc.orc-lado td.par,table.orc.orc-lado th.par{background:#fbfbfd;border-left:1px solid #e9ebf0}
+table.orc.orc-lado th.mescab{text-align:center;border-left:1px solid #e9ebf0;padding-bottom:5px}
+table.orc.orc-lado th.sub{font-size:9.5px;letter-spacing:.05em;color:var(--g400);padding-top:0;padding-bottom:9px}
+table.orc.orc-lado tr.tot td.par{background:#fff4e6}
 .orc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:4px 0 22px}
 .orc-card{border:1px solid var(--g200);border-radius:14px;padding:16px 17px 15px;background:var(--card);box-shadow:var(--shadow)}
 .orc-card .t{font-family:'Plus Jakarta Sans';font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);font-weight:600}
@@ -1327,34 +1332,49 @@ function orcTabelaAcum(SO,SR,ix,rbO,rbR){
     +'<th>Variação</th><th>%</th></tr></thead><tbody>'+corpo+'</tbody></table>';}
 /* ---- modo 2: matriz mes a mes ----------------------------------------- */
 function orcTabelaMes(SO,SR,rbOs,rbRs){
-  const ms=D.months, todos=ms.map((_,i)=>i);
+  const ms=D.months, todos=ms.map((_,i)=>i), LADO=(ORCCEL==='lado');
+  const ncols=1+(LADO?ms.length*2+2:ms.length+1);
   const celula=(o,r,i,tem)=>{
+    if(LADO)return (tem?'<td class="par">'+fmt(o)+orcAV(o,rbOs[i])+'</td>':'<td class="par sem">—</td>')
+                  +'<td>'+fmt(r)+orcAV(r,rbRs[i])+'</td>';
     if(ORCCEL==='orc')return tem?'<td>'+fmt(o)+orcAV(o,rbOs[i])+'</td>':'<td class="sem">—</td>';
     if(ORCCEL==='real')return '<td>'+fmt(r)+orcAV(r,rbRs[i])+'</td>';
     if(!tem)return '<td class="sem">—</td>';
-    const d=round2(r-o);
+    const d=round2(r-o), p=Math.abs(o)>0.005?(d/Math.abs(o)*100):null;
     return '<td class="orc-d '+orcCls(d,o)+'">'+(d>0?'+':'')+fmt(d)
-      +(Math.abs(o)>0.005?'<span class="pc">'+(d/Math.abs(o)*100>0?'+':'')+(d/Math.abs(o)*100).toFixed(0)+'%</span>':'')+'</td>';};
+      +(p===null?'':'<span class="pc">'+(p>0?'+':'')+p.toFixed(0)+'%</span>')+'</td>';};
+  const totCel=(o,r,tem,rbO,rbR)=>{
+    if(LADO)return (tem?'<td class="tt par">'+fmt(o)+orcAV(o,rbO)+'</td>':'<td class="tt par sem">—</td>')
+                  +'<td class="tt">'+fmt(r)+orcAV(r,rbR)+'</td>';
+    if(ORCCEL==='orc')return '<td class="tt">'+(tem?fmt(o):'—')+'</td>';
+    if(ORCCEL==='real')return '<td class="tt">'+fmt(r)+'</td>';
+    if(!tem)return '<td class="tt">—</td>';
+    const d=round2(r-o);
+    return '<td class="tt"><span class="orc-d '+orcCls(d,o)+'">'+(d>0?'+':'')+fmt(d)+'</span></td>';};
+  const rbOt=orcSoma(rbOs,todos), rbRt=orcSoma(rbRs,todos);
   let corpo='',TO=ms.map(()=>0),TR=ms.map(()=>0);
   orcLinhas(SO,SR,todos).forEach(([titulo,linhas])=>{
-    corpo+='<tr class="grp"><td colspan="'+(ms.length+2)+'">'+titulo+'</td></tr>';
+    corpo+='<tr class="grp"><td colspan="'+ncols+'">'+titulo+'</td></tr>';
     linhas.forEach(n=>{
       const tem=orcTemO(n), so=SO[n]||ms.map(()=>0), sr=SR[n]||ms.map(()=>0);
       ms.forEach((_,i)=>{TO[i]+=(tem?so[i]:0);TR[i]+=sr[i];});
-      const o=orcSoma(so,todos), r=orcSoma(sr,todos), d=tem?round2(r-o):null;
       corpo+='<tr><td class="l">'+n.replace(/^\d+\.\s*/,'')+'</td>'
         +ms.map((_,i)=>celula(tem?so[i]:0,sr[i],i,tem)).join('')
-        +'<td class="tt">'+(ORCCEL==='orc'?(tem?fmt(o):'—'):ORCCEL==='real'?fmt(r)
-            :(d===null?'—':'<span class="orc-d '+orcCls(d,o)+'">'+(d>0?'+':'')+fmt(d)+'</span>'))+'</td></tr>';});});
-  const dT=ms.map((_,i)=>round2(TR[i]-TO[i]));
-  const soT=orcSoma(TO,todos), srT=orcSoma(TR,todos), dTot=round2(srT-soT);
-  corpo+='<tr class="tot"><td class="l">EBITDA</td>'
-    +ms.map((_,i)=>ORCCEL==='orc'?'<td>'+fmt(TO[i])+'</td>':ORCCEL==='real'?'<td>'+fmt(TR[i])+'</td>'
-        :'<td class="orc-d '+(dT[i]>=0?'bom':'ruim')+'">'+(dT[i]>0?'+':'')+fmt(dT[i])+'</td>').join('')
-    +'<td class="tt">'+(ORCCEL==='orc'?fmt(soT):ORCCEL==='real'?fmt(srT)
-        :'<span class="orc-d '+(dTot>=0?'bom':'ruim')+'">'+(dTot>0?'+':'')+fmt(dTot)+'</span>')+'</td></tr>';
-  return '<table class="orc orc-mx"><thead><tr><th class="l">Linha</th>'
-    +ms.map(m=>'<th>'+(D.mes_labels[m]||m)+'</th>').join('')+'<th>Total</th></tr></thead><tbody>'+corpo+'</tbody></table>';}
+        +totCel(orcSoma(so,todos),orcSoma(sr,todos),tem,rbOt,rbRt)+'</tr>';});});
+  const soT=orcSoma(TO,todos), srT=orcSoma(TR,todos);
+  const linhaTot=ms.map((_,i)=>{
+    if(LADO)return '<td class="par">'+fmt(TO[i])+'</td><td>'+fmt(TR[i])+'</td>';
+    if(ORCCEL==='orc')return '<td>'+fmt(TO[i])+'</td>';
+    if(ORCCEL==='real')return '<td>'+fmt(TR[i])+'</td>';
+    const d=round2(TR[i]-TO[i]);
+    return '<td class="orc-d '+(d>=0?'bom':'ruim')+'">'+(d>0?'+':'')+fmt(d)+'</td>';}).join('');
+  corpo+='<tr class="tot"><td class="l">EBITDA</td>'+linhaTot+totCel(soT,srT,true,rbOt,rbRt)+'</tr>';
+  const cab=LADO
+    ? '<tr><th class="l" rowspan="2">Linha</th>'+ms.map(m=>'<th colspan="2" class="mescab">'+(D.mes_labels[m]||m)+'</th>').join('')
+       +'<th colspan="2" class="mescab">Total</th></tr>'
+      +'<tr>'+ms.concat(['T']).map(()=>'<th class="sub par">Orç.</th><th class="sub">Real.</th>').join('')+'</tr>'
+    : '<tr><th class="l">Linha</th>'+ms.map(m=>'<th>'+(D.mes_labels[m]||m)+'</th>').join('')+'<th>Total</th></tr>';
+  return '<table class="orc orc-mx'+(LADO?' orc-lado':'')+'"><thead>'+cab+'</thead><tbody>'+corpo+'</tbody></table>';}
 /* ---- render ------------------------------------------------------------ */
 function renderOrc(){
   const box=document.getElementById('orcBody');if(!box||!D.orc)return;
@@ -1382,7 +1402,7 @@ function renderOrc(){
   const barra='<div class="orc-sw"><span class="lab">Ver:</span>'
     +bt(ORCMODO,'acum','setOrcModo','Período inteiro')+bt(ORCMODO,'mes','setOrcModo','Mês a mês')
     +(ORCMODO==='mes'?'<span class="lab sep">Célula:</span>'
-        +bt(ORCCEL,'var','setOrcCel','Variação')+bt(ORCCEL,'real','setOrcCel','Realizado')+bt(ORCCEL,'orc','setOrcCel','Orçado')
+        +bt(ORCCEL,'var','setOrcCel','Variação')+bt(ORCCEL,'real','setOrcCel','Realizado')+bt(ORCCEL,'orc','setOrcCel','Orçado')+bt(ORCCEL,'lado','setOrcCel','Orçado e realizado')
       :'')+'</div>';
   box.innerHTML='<div class="orc-cards">'
      +card('Receita — '+per,fmt(rbR),'orçado '+fmt(rbO)+' · '+sinal(round2(rbR-rbO)))
