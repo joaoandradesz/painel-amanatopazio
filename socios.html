@@ -550,6 +550,12 @@ table.orc.orc-lado tr.tot td.par{background:#fff4e6}
 .orc-aviso{border-left:3px solid var(--orange);background:#fff7ed;padding:14px 17px;border-radius:0 10px 10px 0;font-size:13.5px;color:var(--ink2);line-height:1.6;margin:2px 0 20px}
 body.socios .rsm-wrap,body.socios .rsm-nota{display:none}
 body.socios .xm-comp,body.socios .x-comp{cursor:default}
+
+.xtbl th.av,.xtbl td.av{width:74px;text-align:right;white-space:nowrap;
+  font-variant-numeric:tabular-nums;font-size:.82em;color:#6B7280;padding-right:10px}
+.xtbl td.av.base{font-weight:700;color:#111}
+.xtbl tr.x-ebit td.av,.xtbl tr.x-ll td.av,.xtbl tr.x-sub td.av,.xtbl tr.x-result td.av{color:#111;font-weight:600}
+.xtbl td.av.dim{color:#9CA3AF}
 </style></head><body>
 
 <nav class="nav"><div class="wrap">
@@ -627,8 +633,8 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
     <p class="lede">Relatório claro, no estilo planilha. Clique em qualquer categoria para abrir a caixa com os lançamentos dela.</p></div>
   <!-- caixas "Por onde o dinheiro entrou" e "Resumo do periodo" retiradas -->
   <div class="rep-switch"><button onclick="setRegime('caixa')">Fluxo de Caixa (DFC)</button><button class="on" onclick="setRegime('competencia')">DRE (competência)</button></div>
-  <div id="rep-fc" class="repwrap"><table class="xtbl fc"><thead><tr><th class="l" id="fcHead">Demonstrativo do caixa</th><th>Valor</th><th class="c">Lançtos</th></tr></thead><tbody id="fcbody"></tbody></table><div id="fcMatrix"></div><p class="repnote" id="fcNote"></p></div>
-  <div id="rep-dre" class="repwrap on"><table class="xtbl dre"><thead><tr><th class="l" id="dreHead">Categoria</th><th>Valor</th></tr></thead><tbody id="drebody"></tbody></table><div id="dreMatrix"></div><p class="repnote" id="dreNote"></p></div>
+  <div id="rep-fc" class="repwrap"><table class="xtbl fc"><thead><tr><th class="l" id="fcHead">Demonstrativo do caixa</th><th>Valor</th><th class="av">AV %</th><th class="c">Lançtos</th></tr></thead><tbody id="fcbody"></tbody></table><div id="fcMatrix"></div><p class="repnote" id="fcNote"></p></div>
+  <div id="rep-dre" class="repwrap on"><table class="xtbl dre"><thead><tr><th class="l" id="dreHead">Categoria</th><th>Valor</th><th class="av">AV %</th></tr></thead><tbody id="drebody"></tbody></table><div id="dreMatrix"></div><p class="repnote" id="dreNote"></p></div>
   <div class="qa" id="qa"></div>
 </div></section>
 
@@ -1009,16 +1015,24 @@ function cellTd(v,cat,mk,isTot){const z=Math.abs(v)<0.005;
   return `<td class="${cls}"${attr}>${z?'–':fmt(v)}</td>`;}
 function matrixHead(){return `<thead><tr><th class="l">Categoria</th>${D.months.map(m=>`<th>${ML[m]}</th>`).join('')}<th class="tt">Total</th></tr></thead>`;}
 function mrowS(cls,label,vals,tot){return `<tr class="${cls}"><td class="l">${label}</td>${vals.map(v=>cellTd(v,null,null,false)).join('')}<td class="tt ${tot<0?'neg':''}">${fmt(tot)}</td></tr>`;}
+
+// base da analise vertical: receita bruta na DRE, entradas no DFC
+var AVB=0;
+function avSet(v){AVB=Math.abs(v||0);}
+function avTd(v,base,dim){const b=(base===undefined?AVB:Math.abs(base||0));
+  if(!b||Math.abs(v)<0.005) return '<td class="av dim">–</td>';
+  const p=(Math.abs(v)/b*100);
+  return `<td class="av${dim?' dim':''}">${p.toFixed(1).replace('.',',')}%</td>`;}
 function compRow(pre,b,label,cats,cols){
   cats=cats||{};
   const entries=Object.entries(cats).filter(([n,v])=>Math.abs(v)>.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
   const tot=Object.values(cats).reduce((a,v)=>a+v,0);const has=entries.length>0;
   if(!has && Math.abs(tot)<.4) return '';   // linha sem movimento no periodo nao entra
-  if(SOCIOS) return `<tr class="x-comp"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${cols>2?'<td class="c"></td>':''}</tr>`;
-  let H=`<tr class="x-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td><span class="chv ${has?'':'none'}">▸</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${cols>2?'<td class="c"></td>':''}</tr>`;
+  if(SOCIOS) return `<tr class="x-comp"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${avTd(tot)}${cols>2?'<td class="c"></td>':''}</tr>`;
+  let H=`<tr class="x-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td><span class="chv ${has?'':'none'}">▸</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${avTd(tot)}${cols>2?'<td class="c"></td>':''}</tr>`;
   entries.forEach(([cn,v])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,true).filter(t=>Math.abs(t.v)>.004);const ck=tx.length>0;
-    H+=`<tr class="x-catrow grp-${pre}-${b} gh ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(v)}">${fmt(v)}</td>${cols>2?`<td class="c">${tx.length||'—'}</td>`:''}</tr>`;
-    if(ck)H+=`<tr class="x-detail grp-${pre}-${b} gh"><td colspan="${cols}">${txBoxInner(nm,cols===2)}</td></tr>`;
+    H+=`<tr class="x-catrow grp-${pre}-${b} gh ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(v)}">${fmt(v)}</td>${avTd(v,undefined,true)}${cols>2?`<td class="c">${tx.length||'—'}</td>`:''}</tr>`;
+    if(ck)H+=`<tr class="x-detail grp-${pre}-${b} gh"><td colspan="${cols+1}">${txBoxInner(nm,cols===2)}</td></tr>`;
   });
   return H;
 }
@@ -1044,16 +1058,16 @@ function saldoLinha(pre,id,label,key){
   const tot=(dfcM()[key])||0;const S=pre+'-'+id;
   const emps=(CUR==='consol')?['amana','topazio']:[CUR];
   const ck=CK(key);
-  if(SOCIOS) return `<tr class="x-saldo"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v">${fmt(tot)}</td><td class="c"></td></tr>`;
-  let H=`<tr class="x-saldo" onclick="togLvl(this,'${S}','hs')"><td><span class="chv">&#9656;</span>${label}</td><td class="v">${fmt(tot)}</td><td class="c"></td></tr>`;
+  if(SOCIOS) return `<tr class="x-saldo"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v">${fmt(tot)}</td><td class="av dim">–</td><td class="c"></td></tr>`;
+  let H=`<tr class="x-saldo" onclick="togLvl(this,'${S}','hs')"><td><span class="chv">&#9656;</span>${label}</td><td class="v">${fmt(tot)}</td><td class="av dim">–</td><td class="c"></td></tr>`;
   emps.forEach((e,ei)=>{
     const dfc=(D.entities[e].dfc[MES])||{};const v=dfc[key]||0;
     const contas=(dfc.contas||[]).filter(c=>Math.abs(c[ck])>.5);
     const G=S+'-e'+ei;
     if(CUR==='consol')
-      H+=`<tr class="x-saldosub anc-${S} hs" ${contas.length?`onclick="togLvl(this,'${G}','hc')"`:''}><td><span class="chv ${contas.length?'':'none'}">&#9656;</span>${D.entities[e].label}</td><td class="v">${fmt(v)}</td><td class="c"></td></tr>`;
+      H+=`<tr class="x-saldosub anc-${S} hs" ${contas.length?`onclick="togLvl(this,'${G}','hc')"`:''}><td><span class="chv ${contas.length?'':'none'}">&#9656;</span>${D.entities[e].label}</td><td class="v">${fmt(v)}</td><td class="av dim">–</td><td class="c"></td></tr>`;
     contas.forEach(c=>{
-      H+=`<tr class="x-saldocc anc-${S} ${CUR==='consol'?'anc-'+G+' hc':''} hs"><td>${c.n}</td><td class="v">${fmt(c[ck])}</td><td class="c"></td></tr>`;});
+      H+=`<tr class="x-saldocc anc-${S} ${CUR==='consol'?'anc-'+G+' hc':''} hs"><td>${c.n}</td><td class="v">${fmt(c[ck])}</td><td class="av dim">–</td><td class="c"></td></tr>`;});
   });
   return H;
 }
@@ -1085,6 +1099,7 @@ function renderFC(){
     document.getElementById('fcNote').innerHTML=`<b>Regime de caixa.</b> Recebimentos → custos → despesas → investimentos → geração de caixa. Considera apenas o que transitou por conta bancária; os saldos conferem com os extratos, conta a conta, nos sete meses das duas empresas. Clique em <b>Saldo inicial</b> ou <b>Saldo final</b> para abrir por empresa e por conta corrente. Clique na setinha para abrir os níveis; clique num número para ver os lançamentos.`;return;}
   bx.closest('table').classList.remove('hide');document.getElementById('fcMatrix').innerHTML='';
   const dfc=dfcM();let H='';const pre='fcs';
+  avSet(fcGroupsSec(MES,['1.']).reduce((a,[s,g,gd])=>a+gd.total,0));
   H+=saldoLinha('fcs','si','Saldo inicial','saldo_inicial');
   H+=linhaEntradaAjustada();
   H+=fcSection(pre,'entradas','(+) Recebimentos',['1.']);
@@ -1092,7 +1107,7 @@ function renderFC(){
   H+=fcSection(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
   H+=fcSection(pre,'investimentos','(–) Investimentos e empréstimos',['2.7','3.0']);
   H+=fcSection(pre,'demais','(±) Não operacional',['2.8','2.9']);
-  H+=`<tr class="x-result"><td>= Geração de caixa ${isT()?'no período':'no mês'}</td><td class="v ${NC(dfc.resultado)}">${fmt(dfc.resultado)}</td><td class="c"></td></tr>`;
+  H+=`<tr class="x-result"><td>= Geração de caixa ${isT()?'no período':'no mês'}</td><td class="v ${NC(dfc.resultado)}">${fmt(dfc.resultado)}</td>${avTd(dfc.resultado)}<td class="c"></td></tr>`;
   H+=saldoLinha('fcs','sf','Saldo final','acumulado');
   bx.innerHTML=H;
   document.getElementById('fcNote').innerHTML=`<b>Regime de caixa · ${MLL[+MES]}/2026.</b> Recebimentos → custos → despesas → investimentos → geração de caixa. Considera apenas o que transitou por conta bancária. Clique na setinha para abrir cada nível e nos lançamentos.`;
@@ -1101,15 +1116,15 @@ function fcSection(pre,sid,label,prefixes){
   const S=pre+'-'+sid;
   const groups=fcGroupsSec(MES,prefixes).filter(([sec,gn,gd])=>Object.values(gd.cats).some(c=>Math.abs(c.total)>.4));
   const stot=groups.reduce((a,[sec,gn,gd])=>a+gd.total,0);
-  if(SOCIOS) return `<tr class="x-comp lvl0"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v ${NC(stot)}">${fmt(stot)}</td><td class="c"></td></tr>`;
-  let H=`<tr class="x-comp lvl0 open" onclick="togLvl(this,'${S}','hs')"><td><span class="chv">▸</span>${label}</td><td class="v ${NC(stot)}">${fmt(stot)}</td><td class="c"></td></tr>`;
+  if(SOCIOS) return `<tr class="x-comp lvl0"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v ${NC(stot)}">${fmt(stot)}</td>${avTd(stot)}<td class="c"></td></tr>`;
+  let H=`<tr class="x-comp lvl0 open" onclick="togLvl(this,'${S}','hs')"><td><span class="chv">▸</span>${label}</td><td class="v ${NC(stot)}">${fmt(stot)}</td>${avTd(stot)}<td class="c"></td></tr>`;
   groups.forEach(([sec,gn,gd],gi)=>{
     const G=S+'-g'+gi;const gname=cleanGroup(gn);
     const cats=Object.entries(gd.cats).filter(([n,c])=>Math.abs(c.total)>.4).sort((a,b)=>Math.abs(b[1].total)-Math.abs(a[1].total));
-    H+=`<tr class="x-comp lvl1 anc-${S}" ${cats.length?`onclick="togLvl(this,'${G}','hg')"`:''}><td><span class="chv ${cats.length?'':'none'}">▸</span>${gname}</td><td class="v ${NC(gd.total)}">${fmt(gd.total)}</td><td class="c"></td></tr>`;
+    H+=`<tr class="x-comp lvl1 anc-${S}" ${cats.length?`onclick="togLvl(this,'${G}','hg')"`:''}><td><span class="chv ${cats.length?'':'none'}">▸</span>${gname}</td><td class="v ${NC(gd.total)}">${fmt(gd.total)}</td>${avTd(gd.total,undefined,true)}<td class="c"></td></tr>`;
     cats.forEach(([cn,c])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,true).filter(t=>Math.abs(t.v)>.004);const ck=tx.length>0;
-      H+=`<tr class="x-catrow lvl2 anc-${S} anc-${G} hg ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(c.total)}">${fmt(c.total)}</td><td class="c">${tx.length||'—'}</td></tr>`;
-      if(ck)H+=`<tr class="x-detail anc-${S} anc-${G} hg"><td colspan="3">${txBoxInner(nm,false)}</td></tr>`;
+      H+=`<tr class="x-catrow lvl2 anc-${S} anc-${G} hg ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(c.total)}">${fmt(c.total)}</td>${avTd(c.total,undefined,true)}<td class="c">${tx.length||'—'}</td></tr>`;
+      if(ck)H+=`<tr class="x-detail anc-${S} anc-${G} hg"><td colspan="4">${txBoxInner(nm,false)}</td></tr>`;
     });
   });
   return H;
@@ -1159,9 +1174,9 @@ function renderDRE(){
   if(MES==='T'){b.closest('table').classList.add('hide');renderDREMatrix();
     document.getElementById('dreNote').innerHTML=`<b>DRE gerencial · competência.</b> Receita → lucro bruto → EBITDA → lucro líquido. Investimentos e itens não operacionais ficam abaixo da linha, separados do resultado da operação. Clique na setinha para abrir as categorias; clique num número para ver os lançamentos.${notaElim()}`;return;}
   b.closest('table').classList.remove('hide');document.getElementById('dreMatrix').innerHTML='';
-  const C=dreCascade(MES);const pre='dcs';let H='';
+  const C=dreCascade(MES);const pre='dcs';let H='';avSet(C.receita);
   const mg=v=>C.rl>0?` <span class="mg">${(v/C.rl*100).toFixed(1)}% RL</span>`:'';
-  const sub=(l,v,m)=>`<tr class="x-sub"><td>${l}${m||''}</td><td class="v ${NC(v)}">${fmt(v)}</td></tr>`;
+  const sub=(l,v,m)=>`<tr class="x-sub"><td>${l}${m||''}</td><td class="v ${NC(v)}">${fmt(v)}</td>${avTd(v)}</tr>`;
   H+=compRow(pre,'receita','Receita bruta',C.B.receita&&C.B.receita.cats,2);
   H+=compRow(pre,'deducoes','(–) Deduções — impostos, devoluções e taxa de cartão',C.B.deducoes&&C.B.deducoes.cats,2);
   H+=sub('= Receita líquida',C.rl);
@@ -1171,19 +1186,19 @@ function renderDRE(){
   H+=compRow(pre,'comercial','(–) Despesas comerciais',C.B.comercial&&C.B.comercial.cats,2);
   H+=compRow(pre,'admin','(–) Despesas administrativas',C.B.admin&&C.B.admin.cats,2);
   H+=compRow(pre,'pessoal','(–) Pessoal indireto <span class="sub2">administrativo, pró-labore, rescisões, passagens</span>',C.B.pessoal&&C.B.pessoal.cats,2);
-  H+=`<tr class="x-ebit big"><td>= EBITDA${mg(C.ebitda)}</td><td class="v ${NC(C.ebitda)}">${fmt(C.ebitda)}</td></tr>`;
-  H+=`<tr class="x-comp2"><td>(–) Depreciação e amortização <span class="sub2">sem D&A — capex fora da DRE</span></td><td class="v">${fmt(0)}</td></tr>`;
+  H+=`<tr class="x-ebit big"><td>= EBITDA${mg(C.ebitda)}</td><td class="v ${NC(C.ebitda)}">${fmt(C.ebitda)}</td>${avTd(C.ebitda)}</tr>`;
+  H+=`<tr class="x-comp2"><td>(–) Depreciação e amortização <span class="sub2">sem D&A — capex fora da DRE</span></td><td class="v">${fmt(0)}</td><td class="av dim">–</td></tr>`;
   H+=sub('= EBIT · resultado operacional',C.ebit,mg(C.ebit));
   H+=compRow(pre,'resfin','(±) Resultado financeiro',C.resfinCats,2);
   H+=sub('= LAIR',C.lair);
-  H+=`<tr class="x-comp2"><td>(–) IRPJ / CSLL <span class="sub2">no Simples, dentro do DAS</span></td><td class="v">${fmt(0)}</td></tr>`;
-  H+=`<tr class="x-ll"><td>= LUCRO LÍQUIDO${mg(C.ll)}</td><td class="v ${NC(C.ll)}">${fmt(C.ll)}</td></tr>`;
-  H+=`<tr class="xsep"><td colspan="2">Abaixo do EBITDA — capex e não operacional</td></tr>`;
+  H+=`<tr class="x-comp2"><td>(–) IRPJ / CSLL <span class="sub2">no Simples, dentro do DAS</span></td><td class="v">${fmt(0)}</td><td class="av dim">–</td></tr>`;
+  H+=`<tr class="x-ll"><td>= LUCRO LÍQUIDO${mg(C.ll)}</td><td class="v ${NC(C.ll)}">${fmt(C.ll)}</td>${avTd(C.ll)}</tr>`;
+  H+=`<tr class="xsep"><td colspan="3">Abaixo do EBITDA — capex e não operacional</td></tr>`;
   H+=compRow(pre,'investimentos','(–) Investimentos (capex)',C.B.investimentos&&C.B.investimentos.cats,2);
   H+=compRow(pre,'emprestimo','(\u2013) Empr\u00e9stimo <span class="sub2">pagamento de principal, n\u00e3o \u00e9 despesa nem investimento</span>',C.B.emprestimo&&C.B.emprestimo.cats,2);
   H+=compRow(pre,'recnaoop','(+) Receita n\u00e3o operacional <span class="sub2">aportes de s\u00f3cios e rendimento de aplica\u00e7\u00e3o</span>',C.B.recnaoop&&C.B.recnaoop.cats,2);
   H+=compRow(pre,'naoop','(±) Não operacional <span class="sub2">itens fora da operação e seus reembolsos</span>',C.B.naoop&&C.B.naoop.cats,2);
-  H+=`<tr class="x-result"><td>= Resultado após investimentos e não operacional</td><td class="v ${NC(C.res)}">${fmt(C.res)}</td></tr>`;
+  H+=`<tr class="x-result"><td>= Resultado após investimentos e não operacional</td><td class="v ${NC(C.res)}">${fmt(C.res)}</td>${avTd(C.res)}</tr>`;
   b.innerHTML=H;
   document.getElementById('dreNote').innerHTML=`<b>DRE gerencial · competência · ${MLL[+MES]}/2026.</b> Receita → lucro bruto → EBITDA → lucro líquido, com margem sobre a receita líquida. Investimentos e itens não operacionais ficam abaixo da linha. Clique na setinha para abrir as categorias e os lançamentos.${notaElim()}`;
 }
