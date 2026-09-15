@@ -556,6 +556,10 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 .xtbl td.av.base{font-weight:700;color:#111}
 .xtbl tr.x-ebit td.av,.xtbl tr.x-ll td.av,.xtbl tr.x-sub td.av,.xtbl tr.x-result td.av{color:#111;font-weight:600}
 .xtbl td.av.dim{color:#9CA3AF}
+
+.xmatrix td i.avin{display:block;font-style:normal;font-size:.7em;line-height:1.25;
+  color:#9CA3AF;font-variant-numeric:tabular-nums;margin-top:1px}
+.xmatrix td.tt i.avin{color:#6B7280}
 </style></head><body>
 
 <nav class="nav"><div class="wrap">
@@ -768,8 +772,7 @@ function renderKpis(){
   const extra=(rot,v)=>Math.abs(v)>.5?`<div class="ct-l ct-fora"><span>${rot}</span><b>${fmt(v)}</b></div>`:'';
   const det=(contas.map(c=>`<div class="ct-l"><span>${c.n}</span><b>${fmt(c.v)}</b></div>`).join('')
     || '<div class="ct-l"><span>sem detalhe de conta neste mês</span></div>')
-    + extra('fora do saldo — adiantamento, cartão e caixinha',foraBanco)
-    + extra('contas de compensação — não é dinheiro',compBanco);
+;
   const k=[
     {lab:'Receita bruta',v:rb,d:P?'no período':'no mês',cls:'tin'},
     {lab:'EBITDA',v:r.ebitda||0,d:'operacional'+pc(r.ebitda||0,rb),accent:true},
@@ -1014,16 +1017,22 @@ function DFCorDRE(){return document.querySelector('.rtab.active')&&/DRE/.test(do
 document.addEventListener('click',function(ev){const td=ev.target.closest('td.xcell');if(td){openCell(td.getAttribute('data-cat'),td.getAttribute('data-mk'));}});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeCell();});
 /* ===== matriz: célula com centavos, clicável quando há categoria ===== */
-function cellTd(v,cat,mk,isTot){const z=Math.abs(v)<0.005;
+function cellTd(v,cat,mk,isTot,mi){const z=Math.abs(v)<0.005;
   const cls=[z?'zero':(v<0?'neg':''),isTot?'tt':'',(cat&&!z)?'xcell':''].filter(Boolean).join(' ');
   const attr=(cat&&!z)?` data-cat="${String(cat).replace(/"/g,'&quot;')}" data-mk="${mk}"`:'';
-  return `<td class="${cls}"${attr}>${z?'–':fmt(v)}</td>`;}
+  const pct=(AVM&&mi!=null&&!z)?avPct(v,AVM[mi]):'';
+  return `<td class="${cls}"${attr}>${z?'–':fmt(v)}${pct}</td>`;}
 function matrixHead(){return `<thead><tr><th class="l">Categoria</th>${D.months.map(m=>`<th>${ML[m]}</th>`).join('')}<th class="tt">Total</th><th class="av">AV %</th></tr></thead>`;}
-function mrowS(cls,label,vals,tot){return `<tr class="${cls}"><td class="l">${label}</td>${vals.map(v=>cellTd(v,null,null,false)).join('')}<td class="tt ${tot<0?'neg':''}">${fmt(tot)}</td>${avTd(tot)}</tr>`;}
+function mrowS(cls,label,vals,tot){return `<tr class="${cls}"><td class="l">${label}</td>${vals.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${tot<0?'neg':''}">${fmt(tot)}</td>${avTd(tot)}</tr>`;}
 
 // base da analise vertical: receita bruta na DRE, entradas no DFC
-var AVB=0;
+var AVB=0, AVM=null;
 function avSet(v){AVB=Math.abs(v||0);}
+// AVM: base de cada mes, na mesma ordem de D.months (usado so na matriz)
+function avSetM(arr){AVM=(arr||[]).map(v=>Math.abs(v||0));}
+function avPct(v,base){const b=Math.abs(base||0);
+  if(!b||Math.abs(v)<0.005) return '';
+  return `<i class="avin">${(Math.abs(v)/b*100).toFixed(1).replace('.',',')}%</i>`;}
 function avTd(v,base,dim){const b=(base===undefined?AVB:Math.abs(base||0));
   if(!b||Math.abs(v)<0.005) return '<td class="av dim">–</td>';
   const p=(Math.abs(v)/b*100);
@@ -1081,8 +1090,8 @@ function saldoLinhaM(pre,id,label,key,mode){
   const emps=(CUR==='consol')?['amana','topazio']:[CUR];
   const pick=a=>mode==='first'?a[0]:a[a.length-1];
   const vals=months.map(m=>(E().dfc[String(m)]||{})[key]||0);
-  if(SOCIOS) return `<tr class="r0"><td class="l"><span class="chv none"></span>${label}</td>${vals.map(v=>cellTd(v,null,null,false)).join('')}<td class="tt">${fmt(pick(vals))}</td><td class="av dim">–</td></tr>`;
-  let H=`<tr class="r0" onclick="togLvl(this,'${S}','hs')"><td class="l"><span class="chv">&#9656;</span>${label}</td>${vals.map(v=>cellTd(v,null,null,false)).join('')}<td class="tt">${fmt(pick(vals))}</td><td class="av dim">–</td></tr>`;
+  if(SOCIOS) return `<tr class="r0"><td class="l"><span class="chv none"></span>${label}</td>${vals.map((v,i)=>cellTd(v,null,null,false,null)).join('')}<td class="tt">${fmt(pick(vals))}</td><td class="av dim">–</td></tr>`;
+  let H=`<tr class="r0" onclick="togLvl(this,'${S}','hs')"><td class="l"><span class="chv">&#9656;</span>${label}</td>${vals.map((v,i)=>cellTd(v,null,null,false,null)).join('')}<td class="tt">${fmt(pick(vals))}</td><td class="av dim">–</td></tr>`;
   emps.forEach((e,ei)=>{
     const ev=months.map(m=>(D.entities[e].dfc[String(m)]||{})[key]||0);
     const G=S+'-e'+ei;
@@ -1090,9 +1099,9 @@ function saldoLinhaM(pre,id,label,key,mode){
     const linhaCC=n=>months.map(m=>{const L=((D.entities[e].dfc[String(m)]||{}).contas||[]).find(c=>c.n===n);return L?L[ck]:0;});
     const ativos=nomes.filter(n=>linhaCC(n).some(v=>Math.abs(v)>.5));
     if(CUR==='consol')
-      H+=`<tr class="x-saldosub anc-${S} hs" ${ativos.length?`onclick="togLvl(this,'${G}','hc')"`:''}><td class="l"><span class="chv ${ativos.length?'':'none'}">&#9656;</span>${D.entities[e].label}</td>${ev.map(v=>cellTd(v,null,null,false)).join('')}<td class="tt">${fmt(pick(ev))}</td><td class="av dim">–</td></tr>`;
+      H+=`<tr class="x-saldosub anc-${S} hs" ${ativos.length?`onclick="togLvl(this,'${G}','hc')"`:''}><td class="l"><span class="chv ${ativos.length?'':'none'}">&#9656;</span>${D.entities[e].label}</td>${ev.map(v=>cellTd(v,null,null,false,null)).join('')}<td class="tt">${fmt(pick(ev))}</td><td class="av dim">–</td></tr>`;
     ativos.forEach(n=>{const a=linhaCC(n);
-      H+=`<tr class="x-saldocc anc-${S} ${CUR==='consol'?'anc-'+G+' hc':''} hs"><td class="l">${n}</td>${a.map(v=>cellTd(v,null,null,false)).join('')}<td class="tt">${fmt(pick(a))}</td><td class="av dim">–</td></tr>`;});
+      H+=`<tr class="x-saldocc anc-${S} ${CUR==='consol'?'anc-'+G+' hc':''} hs"><td class="l">${n}</td>${a.map(v=>cellTd(v,null,null,false,null)).join('')}<td class="tt">${fmt(pick(a))}</td><td class="av dim">–</td></tr>`;});
   });
   return H;
 }
@@ -1103,7 +1112,7 @@ function renderFC(){
   if(MES==='T'){bx.closest('table').classList.add('hide');renderFCMatrix();
     document.getElementById('fcNote').innerHTML=`<b>Regime de caixa.</b> Recebimentos → custos → despesas → investimentos → geração de caixa. Considera apenas o que transitou por conta bancária; os saldos conferem com os extratos, conta a conta, nos sete meses das duas empresas. Clique em <b>Saldo inicial</b> ou <b>Saldo final</b> para abrir por empresa e por conta corrente. Clique na setinha para abrir os níveis; clique num número para ver os lançamentos.`;return;}
   bx.closest('table').classList.remove('hide');document.getElementById('fcMatrix').innerHTML='';
-  const dfc=dfcM();let H='';const pre='fcs';
+  const dfc=dfcM();let H='';const pre='fcs';avSetM(null);
   avSet(fcGroupsSec(MES,['1.']).reduce((a,[s,g,gd])=>a+gd.total,0));
   H+=saldoLinha('fcs','si','Saldo inicial','saldo_inicial');
   H+=linhaEntradaAjustada();
@@ -1142,7 +1151,8 @@ function gcOper(m){   // caixa antes de investimento, emprestimo e nao operacion
 }
 function renderFCMatrix(){
   const months=D.months;const pre='fcm';
-  avSet(D.months.reduce((a,m)=>a+fcGroupsSec(String(m),['1.']).reduce((x,[s,g,gd])=>x+gd.total,0),0));
+  const entM=D.months.map(m=>fcGroupsSec(String(m),['1.']).reduce((x,[s,g,gd])=>x+gd.total,0));
+  avSet(entM.reduce((a,v)=>a+v,0)); avSetM(entM);
   let H=matrixHead()+'<tbody>';
   H+=saldoLinhaM('fcm','si','Saldo inicial','saldo_inicial','first');
   H+=linhaEntradaAjustadaM();
@@ -1162,15 +1172,15 @@ function fcSectionM(pre,sid,label,prefixes){
   const groups=fcGroupsSec('T',prefixes).filter(([sec,gn,gd])=>Object.values(gd.cats).some(c=>Math.abs(c.total)>.4));
   const secArr=months.map(m=>groups.reduce((a,[sec,gn])=>a+fcGVal(String(m),sec,gn),0));
   const secTot=groups.reduce((a,[sec,gn,gd])=>a+gd.total,0);
-  if(SOCIOS) return `<tr class="xm-comp lvl0"><td class="l"><span class="chv none"></span>${label}</td>${secArr.map(v=>cellTd(v,null,null)).join('')}<td class="tt ${secTot<0?'neg':''}">${fmt(secTot)}</td>${avTd(secTot)}</tr>`;
-  let H=`<tr class="xm-comp lvl0 open" onclick="togLvl(this,'${S}','hs')"><td class="l"><span class="chv">▸</span>${label}</td>${secArr.map(v=>cellTd(v,null,null)).join('')}<td class="tt ${secTot<0?'neg':''}">${fmt(secTot)}</td>${avTd(secTot)}</tr>`;
+  if(SOCIOS) return `<tr class="xm-comp lvl0"><td class="l"><span class="chv none"></span>${label}</td>${secArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${secTot<0?'neg':''}">${fmt(secTot)}</td>${avTd(secTot)}</tr>`;
+  let H=`<tr class="xm-comp lvl0 open" onclick="togLvl(this,'${S}','hs')"><td class="l"><span class="chv">▸</span>${label}</td>${secArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${secTot<0?'neg':''}">${fmt(secTot)}</td>${avTd(secTot)}</tr>`;
   groups.forEach(([sec,gn,gd],gi)=>{
     const G=S+'-g'+gi;const gname=cleanGroup(gn);
     const cats=Object.entries(gd.cats).filter(([n,c])=>Math.abs(c.total)>.4).sort((a,b)=>Math.abs(b[1].total)-Math.abs(a[1].total));
     const gArr=months.map(m=>fcGVal(String(m),sec,gn));
-    H+=`<tr class="xm-comp lvl1 anc-${S}" ${cats.length?`onclick="togLvl(this,'${G}','hg')"`:''}><td class="l gsub"><span class="chv ${cats.length?'':'none'}">▸</span>${gname}</td>${gArr.map(v=>cellTd(v,null,null)).join('')}<td class="tt ${gd.total<0?'neg':''}">${fmt(gd.total)}</td>${avTd(gd.total,undefined,true)}</tr>`;
+    H+=`<tr class="xm-comp lvl1 anc-${S}" ${cats.length?`onclick="togLvl(this,'${G}','hg')"`:''}><td class="l gsub"><span class="chv ${cats.length?'':'none'}">▸</span>${gname}</td>${gArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${gd.total<0?'neg':''}">${fmt(gd.total)}</td>${avTd(gd.total,undefined,true)}</tr>`;
     cats.forEach(([cn,c])=>{const nm=cleanCat(cn);
-      H+=`<tr class="r3 anc-${S} anc-${G} hg"><td class="l">${nm}</td>${months.map(m=>cellTd(fcCVal(String(m),sec,gn,cn),nm,String(m))).join('')}${cellTd(c.total,nm,'T',true)}${avTd(c.total,undefined,true)}</tr>`;});
+      H+=`<tr class="r3 anc-${S} anc-${G} hg"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(fcCVal(String(m),sec,gn,cn),nm,String(m),false,i)).join('')}${cellTd(c.total,nm,'T',true)}${avTd(c.total,undefined,true)}</tr>`;});
   });
   return H;
 }
@@ -1181,7 +1191,7 @@ function renderDRE(){
   if(MES==='T'){b.closest('table').classList.add('hide');renderDREMatrix();
     document.getElementById('dreNote').innerHTML=`<b>DRE gerencial · competência.</b> Receita → lucro bruto → EBITDA → lucro líquido. Investimentos e itens não operacionais ficam abaixo da linha, separados do resultado da operação. Clique na setinha para abrir as categorias; clique num número para ver os lançamentos.${notaElim()}`;return;}
   b.closest('table').classList.remove('hide');document.getElementById('dreMatrix').innerHTML='';
-  const C=dreCascade(MES);const pre='dcs';let H='';avSet(C.receita);
+  const C=dreCascade(MES);const pre='dcs';let H='';avSet(C.receita);avSetM(null);
   const mg=v=>C.rl>0?` <span class="mg">${(v/C.rl*100).toFixed(1)}% RL</span>`:'';
   const sub=(l,v,m)=>`<tr class="x-sub"><td>${l}${m||''}</td><td class="v ${NC(v)}">${fmt(v)}</td>${avTd(v)}</tr>`;
   H+=compRow(pre,'receita','Receita bruta',C.B.receita&&C.B.receita.cats,2);
@@ -1212,6 +1222,7 @@ function renderDRE(){
 function renderDREMatrix(){
   const months=D.months;const pre='dcm';const Bm=months.map(m=>dreBuckets(String(m)));const Bt=dreBuckets('T');
   avSet((Bt['receita']||{total:0}).total);
+  avSetM(Bm.map(B=>(B['receita']||{total:0}).total));
   const bcat=(Bx,b,cn)=>((Bx[b]&&Bx[b].cats[cn])||0);
   const bconta=(Bx,b,co,cn)=>{const q=Bx[b]&&Bx[b].contas&&Bx[b].contas[co];return q?(cn===undefined?q.total:(q.cats[cn]||0)):0;};
   const compM=(b,label)=>{
@@ -1223,16 +1234,16 @@ function renderDREMatrix(){
     const totArr=months.map((m,i)=>(Bm[i][b]||{total:0}).total);
     if(SOCIOS){
       return `<tr class="xm-comp"><td class="l"><span class="chv none"></span>${label}</td>`
-        +totArr.map(v=>cellTd(v,null,null)).join('')
+        +totArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')
         +`<td class="tt ${d.total<0?'neg':''}">${fmt(d.total)}</td>${avTd(d.total)}</tr>`;
     }
-    let s=`<tr class="xm-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td class="l"><span class="chv ${has?'':'none'}">▸</span>${label}</td>${totArr.map(v=>cellTd(v,null,null)).join('')}<td class="tt ${d.total<0?'neg':''}">${fmt(d.total)}</td>${avTd(d.total)}</tr>`;
+    let s=`<tr class="xm-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td class="l"><span class="chv ${has?'':'none'}">▸</span>${label}</td>${totArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${d.total<0?'neg':''}">${fmt(d.total)}</td>${avTd(d.total)}</tr>`;
     contas.forEach(([co,q],ci)=>{
       const G=pre+'-'+b+'-c'+ci;
       const cats=Object.entries(q.cats).filter(([n,v])=>Math.abs(v)>.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
-      s+=`<tr class="r2 grp-${pre}-${b} gh" ${cats.length>1?`onclick="togGrp(this,'${G}')"`:''}><td class="l"><span class="chv ${cats.length>1?'':'none'}">▸</span>${co}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co),null,null)).join('')}<td class="tt ${q.total<0?'neg':''}">${fmt(q.total)}</td>${avTd(q.total,undefined,true)}</tr>`;
+      s+=`<tr class="r2 grp-${pre}-${b} gh" ${cats.length>1?`onclick="togGrp(this,'${G}')"`:''}><td class="l"><span class="chv ${cats.length>1?'':'none'}">▸</span>${co}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co),null,null,false,i)).join('')}<td class="tt ${q.total<0?'neg':''}">${fmt(q.total)}</td>${avTd(q.total,undefined,true)}</tr>`;
       if(cats.length>1) cats.forEach(([cn,tv])=>{const nm=cleanCat(cn);
-        s+=`<tr class="r3 grp-${pre}-${b} grp-${G} gh"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co,cn),nm,String(m))).join('')}${cellTd(tv,nm,'T',true)}${avTd(tv,undefined,true)}</tr>`;});
+        s+=`<tr class="r3 grp-${pre}-${b} grp-${G} gh"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co,cn),nm,String(m),false,i)).join('')}${cellTd(tv,nm,'T',true)}${avTd(tv,undefined,true)}</tr>`;});
     });
     return s;
   };
