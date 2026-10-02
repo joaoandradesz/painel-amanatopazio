@@ -1672,7 +1672,8 @@ function renderCancCanal(){
   const tb=document.getElementById('cc-tab'); if(!tb) return;
   const CC=D.canc_canal||{}, mk=(CC[MES]?MES:(isT()?'T':MES)), arr=CC[mk]||[];
   const sub=document.getElementById('cc-sub');
-  if(sub) sub.textContent=isT()?rangeTxt():(D.mes_labels[String(MES)]||'');
+  if(sub){const ms=MS().map(String).filter(x=>CC[x]&&CC[x].length);
+    sub.textContent=!ms.length?'':(isT()?((D.mes_labels[ms[0]]||'')+(ms.length>1?' a '+(D.mes_labels[ms[ms.length-1]]||''):'')):(D.mes_labels[String(MES)]||''));}
   if(!arr.length){tb.innerHTML='';const n=document.getElementById('cc-note');if(n)n.textContent='Sem base de reservas para este período.';return;}
   const f=(n,d=0)=>Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
   const m=(n)=>'R$ '+f(n,2);
