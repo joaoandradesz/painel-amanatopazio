@@ -1249,7 +1249,7 @@ function renderFCMatrix(){
 }
 function fcSectionM(pre,sid,label,prefixes){
   const months=MS();const S=pre+'-'+sid;
-  const groups=fcGroupsSec('T',prefixes).filter(([sec,gn,gd])=>Object.values(gd.cats).some(c=>Math.abs(c.total)>.4));
+  const groups=fcGroupsSec(TOT(),prefixes).filter(([sec,gn,gd])=>Object.values(gd.cats).some(c=>Math.abs(c.total)>.4));
   const secArr=months.map(m=>groups.reduce((a,[sec,gn])=>a+fcGVal(String(m),sec,gn),0));
   const secTot=groups.reduce((a,[sec,gn,gd])=>a+gd.total,0);
   if(SOCIOS) return `<tr class="xm-comp lvl0"><td class="l"><span class="chv none"></span>${label}</td>${secArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${secTot<0?'neg':''}">${fmt(secTot)}</td>${avTd(secTot)}</tr>`;
@@ -1260,7 +1260,7 @@ function fcSectionM(pre,sid,label,prefixes){
     const gArr=months.map(m=>fcGVal(String(m),sec,gn));
     H+=`<tr class="xm-comp lvl1 anc-${S}" ${cats.length?`onclick="togLvl(this,'${G}','hg')"`:''}><td class="l gsub"><span class="chv ${cats.length?'':'none'}">▸</span>${gname}</td>${gArr.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${gd.total<0?'neg':''}">${fmt(gd.total)}</td>${avTd(gd.total,undefined,true)}</tr>`;
     cats.forEach(([cn,c])=>{const nm=cleanCat(cn);
-      H+=`<tr class="r3 anc-${S} anc-${G} hg"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(fcCVal(String(m),sec,gn,cn),nm,String(m),false,i)).join('')}${cellTd(c.total,nm,'T',true)}${avTd(c.total,undefined,true)}</tr>`;});
+      H+=`<tr class="r3 anc-${S} anc-${G} hg"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(fcCVal(String(m),sec,gn,cn),nm,String(m),false,i)).join('')}${cellTd(c.total,nm,TOT(),true)}${avTd(c.total,undefined,true)}</tr>`;});
   });
   return H;
 }
@@ -1302,7 +1302,7 @@ function renderDRE(){
   document.getElementById('dreNote').innerHTML=`<b>DRE gerencial · ${anoDe(MES)===2025?'base caixa (extrato)':'competência'} · ${mesLongo(MES)}.</b> Receita → lucro bruto → EBITDA → lucro líquido, com margem sobre a receita líquida. Investimentos e itens não operacionais ficam abaixo da linha. Clique na setinha para abrir as categorias e os lançamentos.${String(MES)==='8'?' <b>Agosto</b> foi montada direto da base do Omie (títulos pela data de emissão, mais os lançamentos avulsos de conta corrente, puxados em 02/10/2026), com as contas de controle de adiantamento e reversão fora, como o próprio Omie faz. A Topázio deixou de faturar em maio/2026 — daí a receita bruta dela ser só frigobar e serviços extras, e o repasse da Amana aparecer como adiantamento de venda de reservas.':''}${notaElim()}`;
 }
 function renderDREMatrix(){
-  const months=MD();const pre='dcm';const Bm=months.map(m=>dreBuckets(String(m)));const Bt=dreBuckets('T');
+  const months=MD();const pre='dcm';const Bm=months.map(m=>dreBuckets(String(m)));const Bt=dreBuckets(TOT());
   const matrixHeadD=()=>matrixHead(months);
   avSet((Bt['receita']||{total:0}).total);
   avSetM(Bm.map(B=>(B['receita']||{total:0}).total));
@@ -1326,7 +1326,7 @@ function renderDREMatrix(){
       const cats=Object.entries(q.cats).filter(([n,v])=>Math.abs(v)>.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
       s+=`<tr class="r2 grp-${pre}-${b} gh" ${cats.length>1?`onclick="togGrp(this,'${G}')"`:''}><td class="l"><span class="chv ${cats.length>1?'':'none'}">▸</span>${co}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co),null,null,false,i)).join('')}<td class="tt ${q.total<0?'neg':''}">${fmt(q.total)}</td>${avTd(q.total,undefined,true)}</tr>`;
       if(cats.length>1) cats.forEach(([cn,tv])=>{const nm=cleanCat(cn);
-        s+=`<tr class="r3 grp-${pre}-${b} grp-${G} gh"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co,cn),nm,String(m),false,i)).join('')}${cellTd(tv,nm,'T',true)}${avTd(tv,undefined,true)}</tr>`;});
+        s+=`<tr class="r3 grp-${pre}-${b} grp-${G} gh"><td class="l">${nm}</td>${months.map((m,i)=>cellTd(bconta(Bm[i],b,co,cn),nm,String(m),false,i)).join('')}${cellTd(tv,nm,TOT(),true)}${avTd(tv,undefined,true)}</tr>`;});
     });
     return s;
   };
