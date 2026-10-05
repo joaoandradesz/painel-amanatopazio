@@ -582,6 +582,9 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 .xmatrix tr.res>td.l{background:#FBEFE2}
 .xmatrix tr.ebit>td.l{background:#D6E4F5}
 .xmatrix tr.sep>td.l{position:static;box-shadow:none;background:#fff}
+.cc-bt{margin-left:8px;border:1px solid #DCDFE6;background:#fff;color:#374151;border-radius:999px;
+  padding:3px 11px;font-family:'Plus Jakarta Sans';font-size:11px;font-weight:600;cursor:pointer}
+.cc-bt:hover{background:#FFF3E6;border-color:#F7B87A;color:#9A3412}
 </style></head><body>
 
 <nav class="nav"><div class="wrap">
@@ -654,8 +657,9 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
   <div class="panel"><h3>Ocupação por canal <span class="sub">set/26</span></h3><div id="com-canal-o"></div></div>
 </div>
 <div class="panel"><h3>Cancelamento por canal <span class="sub" id="cc-sub"></span></h3>
-  <div class="tbl-wrap"><table class="tbl" id="cc-tab"></table></div>
-  <p class="repnote" id="cc-note"></p></div>
+  <p class="repnote" id="cc-resumo"></p>
+  <div id="cc-det" style="display:none"><div class="tbl-wrap"><table class="tbl" id="cc-tab"></table></div>
+  <p class="repnote" id="cc-note"></p></div></div>
 </div></section>
 <section id="relatorios"><div class="wrap">
   <div class="sec-head"><div class="k">Relatório detalhado</div><h2 id="repH">Tabelas por categoria <span class="light">— com abertura de lançamentos</span></h2>
@@ -1389,7 +1393,7 @@ const ORC_GRUPOS=[
   ['Custos da operação',['01. Arrendamento','02. Insumos de café da manhã','03. Fretes','04. Pessoal direto',
      '05. Pessoal indireto da operação','06. Prestação de serviços operacionais','07. Lavanderia','08. Água e esgoto',
      '09. Energia','10. Material de limpeza','11. Insumos para revenda','12. Amenidades','13. Manutenção','14. Custos diversos']],
-  ['Despesas',['01. Despesas com Pessoal','02. Despesa Indireta de Pessoal Indireto','03. Despesas Administrativas',
+  ['Despesas',['01. Despesas com Pessoal','02. Despesa Indireta de Pessoal Indireto','02. Despesas Administrativas','03. Despesas Administrativas',
      '04. Despesas de Vendas e Marketing','05. Despesas Financeiras','05. Outros Tributos']],
 ];
 /* ---- estado da secao -------------------------------------------------- */
@@ -1708,9 +1712,18 @@ function renderCancCanal(){
     `<tr class="x-result"><td>Total</td><td class="num">${f(tc)}</td><td class="num">${f(tr)}</td>`+
     `<td class="num">${f(dT?tc/dT*100:0,1)}%</td><td class="num">${m(tcv)}</td><td class="num">100,0%</td></tr></tbody>`;
   const n=document.getElementById('cc-note');
-  if(n){const top=arr[0];
-    n.innerHTML=`Reservas pela competência de check-in, com o valor previsto de cada uma; cortesia fica fora. `+
-      (top?`<b>${top[0]}</b> responde por ${f(tcv?top[3]/tcv*100:0,1)}% do valor cancelado do período.`:'');}
+  if(n){n.innerHTML='Reservas pela competência de check-in, com o valor previsto de cada uma; cortesia fica fora. Taxa em negrito quando passa de 50%.';}
+  /* resumo sempre visivel; a tabela abre sob demanda */
+  const rs=document.getElementById('cc-resumo');
+  if(rs){const top=arr[0], tx=dT?tc/dT*100:0, aberto=document.getElementById('cc-det').style.display!=='none';
+    rs.innerHTML=`<b>${f(tc)}</b> reservas canceladas contra <b>${f(tr)}</b> confirmadas — taxa de <b>${f(tx,1)}%</b>, `+
+      `<b>${m(tcv)}</b> em valor. `+(top?`${top[0]} responde por <b>${f(tcv?top[3]/tcv*100:0,1)}%</b> do que caiu.`:'')+
+      ` <button class="cc-bt" onclick="togCC()">${aberto?'ocultar detalhe':'ver por canal'}</button>`;}
+}
+function togCC(){
+  const d=document.getElementById('cc-det'); if(!d) return;
+  d.style.display=(d.style.display==='none')?'':'none';
+  renderCancCanal();
 }
 
 function renderAll(){renderQA();renderHero();renderPills();renderResumo();document.querySelectorAll('#regsw button').forEach(b=>b.classList.toggle('on',b.dataset.r===REGIME));renderTrend();renderMonth();}
