@@ -587,89 +587,104 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 .cc-bt:hover{background:#FFF3E6;border-color:#F7B87A;color:#9A3412}
 
 /* ---------- exportar PDF ----------------------------------------------------
-   ponytail: o paginador e o do navegador. Nao ha controle fino de quebra nem
-   numeracao "pagina X de Y"; se um dia isso for exigido, ai entra uma lib de
-   paginacao (paged.js) ou geracao server-side. */
+   O PDF e montado como um documento a parte (.pdoc): paginas A4 deitadas de
+   altura fixa, preenchidas clonando o que ja esta renderizado na tela. As
+   tabelas longas sao quebradas medindo a altura real de cada linha, com o
+   cabecalho repetido. Quem imprime e o navegador (Salvar como PDF).
+   ponytail: sem numeracao "pagina X de Y" e sem indice clicavel; se um dia
+   precisar, entra uma lib de paginacao. */
 .pdfbt{position:fixed;right:20px;bottom:20px;z-index:60;border:none;cursor:pointer;
   display:flex;align-items:center;gap:8px;background:var(--orange);color:#fff;
   font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:700;
-  letter-spacing:.01em;padding:12px 18px;border-radius:999px;
-  box-shadow:0 10px 26px rgba(249,115,22,.40);transition:.2s}
+  padding:12px 18px;border-radius:999px;box-shadow:0 10px 26px rgba(249,115,22,.40);transition:.2s}
 .pdfbt:hover{background:#EA6A0B;transform:translateY(-1px)}
-.pdfbt span.ic{font-size:14px;line-height:1}
 @media(max-width:620px){.pdfbt{right:12px;bottom:12px;padding:10px 14px;font-size:11.5px}}
-.pcapa,.pstamp{display:none}
+
+.pdoc{display:none;counter-reset:pgc;background:#fff;color:var(--ink);font-family:'Inter',sans-serif}
+.pdoc .pg{position:relative;width:297mm;height:209.6mm;padding:10mm 13mm 7mm;background:#fff;
+  display:flex;flex-direction:column;overflow:hidden;counter-increment:pgc;
+  break-after:page;page-break-after:always;break-inside:avoid}
+.pdoc .pg:last-child{break-after:auto;page-break-after:auto}
+.pdoc .pg-h{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+  border-bottom:1.6px solid var(--navy);padding-bottom:3.5mm;margin-bottom:4mm}
+.pdoc .pg-h .ttl{font-family:'Plus Jakarta Sans',sans-serif;font-size:16.5px;font-weight:800;
+  letter-spacing:-.025em;color:var(--navy);line-height:1.15}
+.pdoc .pg-h .sub{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:10.5px;
+  color:var(--g500);margin-top:3px}
+.pdoc .pg-h .rt{text-align:right;flex:none}
+.pdoc .pg-h .rt b{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;
+  font-weight:700;color:var(--navy)}
+.pdoc .pg-h .rt span{font-family:'Plus Jakarta Sans',sans-serif;font-size:7.5px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--g400)}
+.pdoc .pg-b{flex:1;min-height:0;overflow:hidden}
+.pdoc .pg-f{display:flex;justify-content:space-between;align-items:center;margin-top:3mm;
+  padding-top:2mm;border-top:1px solid var(--g200);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:7.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--g400)}
+.pdoc .pg-f .pn{font-style:normal;color:var(--orange);font-weight:800}
+
+/* capa */
+.pdoc .pg.capa{background:var(--navy);color:#fff;padding:0;justify-content:center}
+.pdoc .capa-in{padding:0 22mm;display:flex;flex-direction:column;justify-content:center;height:100%}
+.pdoc .capa img{height:30px!important;width:auto!important;align-self:flex-start;flex:none;margin-bottom:auto;margin-top:18mm}
+.pdoc .capa .k{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--orange);margin-bottom:10px}
+.pdoc .capa h1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:300;font-size:46px;
+  letter-spacing:-.035em;line-height:1.02;margin-bottom:8px}
+.pdoc .capa h1 b{font-weight:800}
+.pdoc .capa .per{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:18px;
+  color:rgba(255,255,255,.72)}
+.pdoc .capa .meta{margin-top:auto;margin-bottom:16mm;padding-top:5mm;
+  border-top:1px solid rgba(255,255,255,.16);display:flex;justify-content:space-between;gap:24px}
+.pdoc .capa .meta div{font-family:'Plus Jakarta Sans',sans-serif;font-size:8.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.pdoc .capa .meta b{display:block;font-size:12px;letter-spacing:0;text-transform:none;color:#fff;margin-bottom:3px}
+
+/* conteudo clonado: tudo cabe na pagina e nada rola */
+.pdoc .pg-b table{width:100%!important;border-collapse:collapse;table-layout:fixed;font-size:8.4px}
+.pdoc .pg-b th,.pdoc .pg-b td{padding:2.3px 4px!important;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;border-radius:0!important}
+.pdoc .pg-b thead th{background:var(--navy)!important;color:#fff!important;font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:7.4px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:none!important}
+.pdoc .pg-b td.l,.pdoc .pg-b th.l,.pdoc .pg-b td:first-child,.pdoc .pg-b th:first-child{
+  position:static!important;box-shadow:none!important;text-align:left;width:188px;
+  white-space:normal;line-height:1.25}
+.pdoc .pg-b .xmwrap,.pdoc .pg-b .tbl-wrap,.pdoc .pg-b .rsm-wrap,.pdoc .pg-b .orc-wrap,
+.pdoc .pg-b .repwrap{overflow:visible!important;border:none!important;box-shadow:none!important;
+  border-radius:0!important;margin:0!important;background:none!important}
+.pdoc .pg-b .kpis{display:grid!important;grid-template-columns:repeat(4,1fr);gap:7mm;margin:0!important}
+.pdoc .pg-b .kpi{box-shadow:none!important;border:1px solid var(--g200)!important;padding:4mm!important}
+.pdoc .pg-b .waterfall svg{max-height:88mm}
+.pdoc .pg-b .pz-grid{grid-template-columns:230px 1fr!important;align-items:center;gap:8mm!important}
+.pdoc .pg-b .pz-chart svg{max-height:62mm}
+.pdoc .pg-b .pz-leg{grid-template-columns:1fr 1fr!important;font-size:8px!important;gap:2mm 6mm!important}
+.pdoc .pg-b .pz-tip{display:none!important}
+.pdoc .pg-b svg{max-width:100%;height:auto;display:block}
+.pdoc .pg-b .waterfall{background:none!important;box-shadow:none!important;border:1px solid var(--g200);
+  border-radius:10px;padding:5mm!important;margin:0!important;color:var(--ink)!important}
+.pdoc .pg-b .waterfall .t,.pdoc .pg-b .waterfall .h,.pdoc .pg-b .wf-x{color:var(--ink2)!important}
+.pdoc .pg-b .orc-cards{display:grid!important;grid-template-columns:repeat(4,1fr);gap:5mm;margin:0 0 5mm!important}
+.pdoc .pg-b .orc-card{box-shadow:none!important;border:1px solid var(--g200)!important}
+.pdoc .pg-b .panel,.pdoc .pg-b .card,.pdoc .pg-b .detailbox{box-shadow:none!important;
+  border:1px solid var(--g200)!important;margin:0 0 4mm!important}
+.pdoc .pg-b .repnote,.pdoc .pg-b .rsm-nota,.pdoc .pg-b .orc-nota,.pdoc .pg-b .lede,
+.pdoc .pg-b .nota{font-size:8px!important;line-height:1.5!important;color:var(--g500)!important;margin:3mm 0 0!important}
+.pdoc .pg-b .kpi-row{display:grid!important;grid-template-columns:repeat(4,1fr);gap:5mm;margin:0 0 4mm!important}
+.pdoc .pg-b .grid2{display:grid!important;grid-template-columns:1fr 1fr;gap:6mm}
+.pdoc .pg-b button,.pdoc .pg-b .cc-bt,.pdoc .pg-b .orc-sw,.pdoc .pg-b .rep-switch{display:none!important}
 
 @media print{
-  @page{size:A4 portrait;margin:14mm 11mm 13mm}
-  @page wide{size:A4 landscape;margin:10mm 9mm 12mm}
+  @page{size:A4 landscape;margin:0}
+  html,body{background:#fff!important}
   html{scroll-behavior:auto}
-  body{background:#fff}
+  body>*{display:none!important}
+  body>.pdoc{display:block!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .nav,.pdfbt,.mespills,.regsw,.rep-switch,.entsw,.modal-bg,.pz-tip,.cc-bt,.qa,
-  .nav-links{display:none!important}
-  .wrap{max-width:none;padding:0 1mm}
-
-  /* capa */
-  .pcapa{display:flex!important;flex-direction:column;justify-content:center;
-    min-height:244mm;background:var(--navy);color:#fff;padding:0 16mm;break-after:page}
-  .pcapa img{height:26px;margin-bottom:30mm}
-  .pcapa .k{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;
-    letter-spacing:.24em;text-transform:uppercase;color:var(--orange);margin-bottom:10px}
-  .pcapa h1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:300;font-size:40px;
-    letter-spacing:-.03em;line-height:1.05;margin-bottom:6px}
-  .pcapa h1 b{font-weight:800}
-  .pcapa .per{font-family:'Fraunces',serif;font-style:italic;font-size:17px;
-    color:rgba(255,255,255,.72);margin-bottom:26mm}
-  .pcapa .meta{border-top:1px solid rgba(255,255,255,.14);padding-top:14px;
-    display:flex;justify-content:space-between;gap:20px;font-size:11px;
-    color:rgba(255,255,255,.62)}
-  .pcapa .meta b{display:block;font-family:'Plus Jakarta Sans',sans-serif;
-    font-size:12px;font-weight:600;color:#fff}
-
-  /* data/hora repetida em todas as paginas */
-  .pstamp{display:block!important;position:fixed;bottom:-9mm;left:0;right:0;
-    font-family:'Plus Jakarta Sans',sans-serif;font-size:7.5px;color:#9CA3AF;
-    letter-spacing:.04em;text-transform:uppercase}
-  .pstamp i{float:right;font-style:normal}
-
-  /* no PDF saem as duas demonstracoes e o detalhe do cancelamento, nao so a aba aberta */
-  .repwrap{display:block!important}
-  .repwrap+.repwrap{margin-top:10mm}
-  #cc-det{display:block!important}
-
-  /* paginacao: uma secao por pagina; as tabelas largas em paisagem */
-  section,footer.foot{break-before:page}
-  #tend,#orcado,#relatorios{page:wide}
-  .hero{padding:0 0 18px}
-  .hero:before{display:none}
-  .card,.panel,.detailbox,.bridge,.waterfall,.kpi,.sec-head,tr{break-inside:avoid}
-  .xmwrap,.tbl-wrap,.rsm-wrap,.orc-wrap,.repwrap,.pz-grid{overflow:visible!important}
-  .xmatrix td.l,.xmatrix th.l{position:static!important;box-shadow:1px 0 0 #DCDFE6}
-  .dtx thead th{position:static!important}
-  /* as matrizes largas tem de caber na pagina: fonte menor, celula apertada e
-     largura fixa, senao o navegador corta as ultimas colunas */
-  .xtbl,.xmatrix,.rsm,.tbl,.orc-tab{font-size:8px;width:100%}
-  .xmatrix,.rsm,.orc-tab{table-layout:fixed}
-  .xmatrix th,.xmatrix td,.rsm th,.rsm td,.xtbl th,.xtbl td,.tbl th,.tbl td,
-  .orc-tab th,.orc-tab td{padding:2.5px 3px!important}
-  .xmatrix td.l,.xmatrix th.l,.rsm td:first-child,.rsm th:first-child{width:118px}
-  .foot{background:var(--navy)}
 }
+
 </style></head><body>
 
-<section class="pcapa" id="pcapa" aria-hidden="true">
-  <img id="pcapalogo" alt="Exact BR">
-  <div class="k">Relatório Gerencial</div>
-  <h1 id="pcTit"></h1>
-  <div class="per" id="pcPer"></div>
-  <div class="meta">
-    <div><b id="pcTs"></b>data e hora da exportação</div>
-    <div style="text-align:right"><b>Exact BR</b>Disciplina Gera Lucro</div>
-  </div>
-</section>
-<div class="pstamp" id="pstamp"></div>
-<button class="pdfbt" onclick="exportPDF()" title="Gera o PDF pela caixa de impressão do navegador (Salvar como PDF)"><span class="ic">&#x2193;</span>Exportar PDF</button>
+<div class="pdoc" id="pdoc"></div>
+<button class="pdfbt" onclick="exportPDF()" title="Monta o relatorio em paginas A4 deitadas e abre a caixa de impressao (Salvar como PDF)"><span>&#x2193;</span>Exportar PDF</button>
 
 <nav class="nav"><div class="wrap">
   <img id="navlogo" alt="Exact BR">
@@ -1815,5 +1830,104 @@ const secs=[...document.querySelectorAll('section[id],header[id]')];const links=
 function spy(){let cur=secs[0].id;const y=scrollY+90;secs.forEach(s=>{if(s.offsetTop<=y)cur=s.id});links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));}
 addEventListener('scroll',spy);
 setEntity('socios');
+
+/* ---------- exportar PDF ----------------------------------------------------
+   Monta um documento proprio (#pdoc) com paginas A4 deitadas de altura fixa e
+   enche cada uma clonando o que ja esta na tela, medindo a altura real para
+   saber onde quebrar. Assim o PDF nunca diverge do painel. */
+function pdocTs(){
+  return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',
+    hour:'2-digit',minute:'2-digit'}).replace(', ',' às ');
+}
+function pdocBuild(){
+  const doc=document.getElementById('pdoc'); if(!doc) return;
+  const TS=pdocTs(), ENT=clabel(), PER=isT()?rangeTxt(MS()):mesLongo(MES);
+  const TIT=CUR==='consol'?'Grupo <b>Amana + Topázio</b>'
+    :(CUR==='amana'?'Amana <b>Empreendimentos Turísticos</b>':'Pousada <b>Topázio</b>');
+  doc.innerHTML='';
+  /* precisa estar renderizado para medir; fica fora da tela enquanto monta */
+  doc.style.cssText='display:block;position:absolute;left:-20000px;top:0;width:297mm';
+
+  doc.insertAdjacentHTML('beforeend',
+    '<section class="pg capa"><div class="capa-in">'
+    +'<img src="data:image/png;base64,'+D.logo_white+'" alt="Exact BR">'
+    +'<div class="k">Relatório Gerencial</div><h1>'+TIT+'</h1>'
+    +'<div class="per">'+PER+'</div>'
+    +'<div class="meta"><div><b>'+TS+'</b>data e hora da exportação</div>'
+    +'<div><b>'+ENT+'</b>visão</div>'
+    +'<div style="text-align:right"><b>Exact BR</b>Disciplina Gera Lucro</div></div>'
+    +'</div></section>');
+
+  function page(tit,sub){
+    const s=document.createElement('section'); s.className='pg';
+    s.innerHTML='<div class="pg-h"><div><div class="ttl">'+tit+'</div>'
+      +(sub?'<div class="sub">'+sub+'</div>':'')+'</div>'
+      +'<div class="rt"><b>'+ENT+'</b><span>'+PER+'</span></div></div>'
+      +'<div class="pg-b"></div>'
+      +'<div class="pg-f"><span>Exact BR · Relatório gerencial · '+ENT+'</span>'
+      +'<span>Exportado em '+TS+' · <i class="pn"></i></span></div>';
+    doc.appendChild(s); return s.querySelector('.pg-b');
+  }
+  const cabe=b=>b.scrollHeight<=b.clientHeight;
+  function bloco(tit,sub,nodes){
+    const ns=nodes.filter(Boolean); if(!ns.length) return;
+    let b=page(tit,sub);
+    ns.forEach(n=>{ b.appendChild(n);
+      if(!cabe(b)&&b.children.length>1){ b.removeChild(n); b=page(tit,sub+' (continuação)'); b.appendChild(n); } });
+  }
+  /* tabela longa: quebra linha a linha, repetindo o cabecalho */
+  function tabela(src,tit,sub){
+    if(!src) return;
+    const tbl=src.matches('table')?src:src.querySelector('table'); if(!tbl||!tbl.tBodies[0]) return;
+    const rows=[...tbl.tBodies[0].rows];
+    const molde=()=>{ const t=tbl.cloneNode(false); if(tbl.tHead) t.appendChild(tbl.tHead.cloneNode(true));
+      [...tbl.querySelectorAll('colgroup')].forEach(c=>t.appendChild(c.cloneNode(true)));
+      t.appendChild(document.createElement('tbody')); return t; };
+    let b=page(tit,sub), t=molde(); b.appendChild(t); let n=0;
+    rows.forEach(r=>{ t.tBodies[0].appendChild(r.cloneNode(true)); n++;
+      if(!cabe(b)&&n>1){ t.tBodies[0].removeChild(t.tBodies[0].lastChild);
+        b=page(tit,sub+' (continuação)'); t=molde(); b.appendChild(t);
+        t.tBodies[0].appendChild(r.cloneNode(true)); n=1; } });
+  }
+  const cl=sel=>{const e=document.querySelector(sel); return e?e.cloneNode(true):null;};
+  const viz=sel=>{const e=document.querySelector(sel);
+    return e&&e.offsetParent!==null&&e.innerHTML.trim()?e.cloneNode(true):null;};
+
+  bloco('Resumo do período','Os números do período em um olhar',[cl('#kpis')]);
+  bloco('Ponte do caixa','Saldo inicial → entradas → saídas → saldo final',[cl('.waterfall')]);
+  tabela(document.getElementById('rsm'),'Indicadores mês a mês','Receita, estrutura de custo, EBITDA e resultado, com análise vertical');
+  const orc=viz('#orcBody');
+  if(orc){ const t=orc.querySelector('table'); const cards=orc.querySelector('.orc-cards');
+    if(cards) bloco('Orçado × realizado','Orçamento da pousada confrontado com o realizado',[cards]);
+    if(t) tabela(t,'Orçado × realizado','Linha a linha, no plano de contas gerencial'); }
+  tabela(document.querySelector('#fcMatrix table')||document.querySelector('.xtbl.fc'),
+         'Fluxo de caixa por categoria','Movimentação bancária conferida conta a conta contra os extratos');
+  tabela(document.querySelector('#dreMatrix table')||document.querySelector('.xtbl.dre'),
+         'DRE por categoria','Resultado por competência, pela data de emissão dos documentos');
+  bloco('Composição das saídas','Todas as saídas do período, agrupadas',[cl('.pz-grid')]);
+  bloco('Desempenho comercial','Ocupação, ticket e RevPar · Pousada Topázio',[cl('#com-kpis'),cl('#com-tab')]);
+  bloco('Cancelamento por canal','Reservas canceladas por canal de venda',
+        [(()=>{const p=document.createElement('p');p.className='repnote';
+                p.innerHTML=(document.getElementById('cc-resumo')||{}).innerHTML||'';return p.innerHTML?p:null;})(),
+         cl('#cc-tab')]);
+
+  /* trava: se algum bloco ainda passar da pagina, reduz ate caber em vez de cortar */
+  [...doc.querySelectorAll('.pg-b')].forEach(b=>{
+    if(b.scrollHeight<=b.clientHeight+1) return;
+    const k=Math.max(.52,(b.clientHeight-2)/b.scrollHeight);
+    const in_=document.createElement('div');
+    while(b.firstChild) in_.appendChild(b.firstChild);
+    in_.style.cssText='transform-origin:top left;transform:scale('+k.toFixed(3)+');width:'+(100/k).toFixed(2)+'%';
+    b.appendChild(in_);
+  });
+  /* numeracao: pagina X de Y, escrita de uma vez so no fim */
+  const tot=doc.querySelectorAll('.pg').length;
+  [...doc.querySelectorAll('.pg')].forEach((p,i)=>{
+    const pn=p.querySelector('.pn'); if(pn) pn.textContent='página '+(i+1)+' de '+tot; });
+  doc.style.cssText='';   /* volta a ficar escondido na tela */
+}
+function exportPDF(){ pdocBuild(); window.print(); }
+addEventListener('beforeprint',function(){ if(!document.getElementById('pdoc').children.length) pdocBuild(); });
+addEventListener('afterprint',function(){ document.getElementById('pdoc').innerHTML=''; });
 </script><div class="modal-bg" id="cellModal" onclick="if(event.target===this)closeCell()"><div class="modal-card"><div class="modal-head"><h3 id="cellModalTitle"></h3><button class="modal-x" onclick="closeCell()">&times;</button></div><div class="modal-body" id="cellModalBody"></div></div></div>
 </body></html>
