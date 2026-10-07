@@ -681,6 +681,17 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
+
+/* geracao de caixa em destaque, so no fluxo de caixa */
+#fcMatrix .xmatrix tr.ebit td,#rep-fc .xtbl tr.x-gcoper td{background:#FFF7ED!important;color:#7A3E00!important;
+  font-weight:800;border-top:1.5px solid #F97316;border-bottom:1.5px solid #F97316}
+#fcMatrix .xmatrix tr.ebit>td.l{background:#FFF7ED!important}
+#fcMatrix .xmatrix tr.res td,#rep-fc .xtbl tr.x-result td{background:#0D0F1A!important;color:#fff!important;
+  font-weight:800;border-top:1.5px solid #0D0F1A;border-bottom:1.5px solid #0D0F1A}
+#fcMatrix .xmatrix tr.res>td.l{background:#0D0F1A!important;color:#fff!important}
+#fcMatrix .xmatrix tr.res td.neg,#rep-fc .xtbl tr.x-result td.neg,
+#fcMatrix .xmatrix tr.res td .neg,#rep-fc .xtbl tr.x-result td .neg{color:#FCA5A5!important}
+#rep-fc .xtbl tr.x-gcoper td:first-child,#rep-fc .xtbl tr.x-result td:first-child{letter-spacing:.01em}
 </style></head><body>
 
 <div class="pdoc" id="pdoc"></div>
@@ -1303,9 +1314,10 @@ function renderFC(){
   H+=fcSection(pre,'entradas','(+) Recebimentos',['1.']);
   H+=fcSection(pre,'custos','(–) Custos',['2.1']);
   H+=fcSection(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
+  H+=`<tr class="x-gcoper"><td>= Geração de caixa operacional</td><td class="v ${NC(gcOperP(MES))}">${fmt(gcOperP(MES))}</td>${avTd(gcOperP(MES))}<td class="c"></td></tr>`;
   H+=fcSection(pre,'investimentos','(–) Investimentos e empréstimos',['2.7','3.0']);
   H+=fcSection(pre,'demais','(±) Não operacional',['2.8','2.9']);
-  H+=`<tr class="x-result"><td>= Geração de caixa ${isT()?'no período':'no mês'}</td><td class="v ${NC(dfc.resultado)}">${fmt(dfc.resultado)}</td>${avTd(dfc.resultado)}<td class="c"></td></tr>`;
+  H+=`<tr class="x-result"><td>= Geração de caixa final <span style="font-weight:500;color:rgba(255,255,255,.72)">· após investimento, empréstimo e não operacional</span></td><td class="v ${NC(dfc.resultado)}">${fmt(dfc.resultado)}</td>${avTd(dfc.resultado)}<td class="c"></td></tr>`;
   H+=saldoLinha('fcs','sf','Saldo final','acumulado');
   bx.innerHTML=H;
   document.getElementById('fcNote').innerHTML=`<b>Regime de caixa · ${mesLongo(MES)}.</b>${anoDe(MES)===2025?' <b>Fonte 2025:</b> base conciliada com os extratos, saldos do Relatório Gerencial.':''}${String(MES)==='9'?' <b>Setembro está em andamento</b> — extrato até '+(D_ATE_SET)+'. Conferido contra os extratos <b>consolidados</b> do Santander e do Bradesco: na Topázio, a conta corrente já fecha em zero igual ao extrato; falta reclassificar R$ 56.741,56 de resgate do ContaMax que entraram na categoria Rendimentos sem a perna de saída na aplicação — são transferência entre conta e aplicação, por isso ficam fora do fluxo, e a diferença não conciliada abaixo zera quando a contrapartida for lançada na tela do Omie. Na Amana, <b>todas as contas bancárias já fecham com o extrato</b> em 30/09: Santander em zero na conta corrente e R$ 236.178,41 no ContaMax, Bradesco em R$ 1,00 com R$ 78.811,59 no CDB, InfinitePay R$ 11.921,00 e Mercado Pago R$ 632,55. A conta GetNet ficou em -R$ 57.369,61 porque as vendas de cartão de 26 a 30/09 ainda não entraram — ela é recebível de cartão, não banco, e se acerta quando o arquivo da GetNet for importado. Na Topázio falta reclassificar R$ 56.741,56 de resgate do ContaMax, que é a diferença não conciliada abaixo.':''} Recebimentos → custos → despesas → investimentos → geração de caixa. Considera apenas o que transitou por conta bancária. Clique na setinha para abrir cada nível e nos lançamentos.`;
