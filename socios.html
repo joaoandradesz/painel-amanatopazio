@@ -692,6 +692,8 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 #fcMatrix .xmatrix tr.res td.neg,#rep-fc .xtbl tr.x-result td.neg,
 #fcMatrix .xmatrix tr.res td .neg,#rep-fc .xtbl tr.x-result td .neg{color:#FCA5A5!important}
 #rep-fc .xtbl tr.x-gcoper td:first-child,#rep-fc .xtbl tr.x-result td:first-child{letter-spacing:.01em}
+
+.dnote.dconc{background:#FFF7ED;border-left:3px solid #F97316;color:#7A3E00}
 </style></head><body>
 
 <div class="pdoc" id="pdoc"></div>
@@ -1182,18 +1184,51 @@ function fcGVal(mk,sec,gn){const g=((E().dfc[mk]||{})[sec]||{})[gn];return g?g.t
 function fcCVal(mk,sec,gn,cn){const g=((E().dfc[mk]||{})[sec]||{})[gn];return g&&g.cats[cn]?g.cats[cn].total:0;}
 function togLvl(btn,id,cls){const willOpen=!btn.classList.contains('open');document.querySelectorAll('.anc-'+id).forEach(r=>r.classList.toggle(cls,!willOpen));btn.classList.toggle('open',willOpen);}
 function togGrp(btn,b){const rows=document.querySelectorAll('.grp-'+b);const show=rows.length&&rows[0].classList.contains('gh');rows.forEach(r=>r.classList.toggle('gh',!show));btn.classList.toggle('open',show);}
+
+/* valor da linha para conferir com a soma do detalhe (ver nota de conciliação) */
+function valorLinha(cat,mk,isDre){
+  try{
+    const e=E(); if(!e) return null;
+    if(isDre){
+      const arv=(e.dre||{})[String(mk)]; if(!arv) return null;
+      let s=0,achou=false;
+      for(const t in arv) for(const g in arv[t]) for(const co in arv[t][g])
+        arv[t][g][co].forEach(x=>{if(x.cat===cat){s+=x.v;achou=true;}});
+      return achou?Math.round(s*100)/100:null;
+    }
+    const md=(e.dfc||{})[String(mk)]; if(!md) return null;
+    let s=0,achou=false;
+    ['receitas','despesas'].forEach(sec=>{const G=md[sec]||{};
+      for(const g in G){const c=G[g].cats||{}; if(c[cat]){s+=c[cat].total;achou=true;}}});
+    return achou?Math.round(s*100)/100:null;
+  }catch(err){return null;}
+}
 function txBoxInner(cname,note,mk,caixa){mk=mk||MES;
   const tx=txOf(cname,mk,caixa===undefined?REGIME==='caixa':caixa).filter(t=>Math.abs(t.v)>.004);
   const total=tx.reduce((a,t)=>a+t.v,0);
   const rows=tx.slice(0,400).map(t=>`<tr><td class="d">${t.d||'—'}</td><td class="p" title="${(t.p||'').replace(/"/g,'')}">${t.p||'—'}</td><td>${t.b?`<span class="bk">${t.b.replace(/_Top_[\d-]+/,'')}</span>`:'—'}</td><td>${t.nf||'—'}</td><td class="vr ${t.v<0?'neg':'pos'}">${fmt(t.v)}</td></tr>`).join('');
-  const nt=note?`<div class="dnote">Lançamentos em regime de caixa — a DRE é competência; o total pode diferir do valor da linha.</div>`:'';
+  const vl=valorLinha(cname,mk,note), dif=(vl===null)?0:Math.round((vl-total)*100)/100;
+  let nt='';
+  if(vl!==null&&Math.abs(dif)>0.004){
+    let pq;
+    if(cname==='Intercompany não casado') pq='É uma linha calculada na eliminação do intercompany — não tem lançamento próprio por trás.';
+    else if(Math.abs(dif)<=0.10) pq='É arredondamento entre as duas fontes.';
+    else if(note&&!isNaN(+mk)&&+mk<=7) pq='De janeiro a julho a linha vem do <b>relatório oficial de DRE do Omie</b> e esta lista vem da <b>base de títulos</b>. Lançamento sem título — tarifa bancária, por exemplo — entra na linha e não aparece aqui.';
+    else pq='As duas fontes não fecham nesta categoria.';
+    nt=`<div class="dnote dconc">A linha mostra <b>${fmt(vl)}</b> e os lançamentos abaixo somam <b>${fmt(total)}</b> — diferença de <b>${fmt(dif)}</b>. ${pq}</div>`;
+  } else if(note){
+    nt=`<div class="dnote">Lançamentos por competência, pela data de emissão — o mesmo critério da linha.</div>`;
+  }
   return `<div class="detailbox"><div class="dhead"><span>${tx.length} lançamento(s)</span><span>Total: ${fmt(total)}</span></div>${nt}<div class="dscroll"><table class="dtx"><thead><tr><th>Data</th><th>Cliente / Fornecedor</th><th>Banco / Conta</th><th>NF</th><th class="r">Valor</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="empty">Sem lançamentos vinculados a esta categoria neste período.</td></tr>'}</tbody></table></div></div>`;
 }
 function xtog(tr){tr.classList.toggle('open');const n=tr.nextElementSibling;if(n&&n.classList.contains('x-detail'))n.classList.toggle('open');}
 /* ===== modal de lançamentos (clique no número da matriz) ===== */
 function openCell(cat,mk){
   document.getElementById('cellModalTitle').textContent=`${cat} · ${mk==='T'?rangeTxt(MS()):mesLongo(mk)} · ${clabel()}`;
-  document.getElementById('cellModalBody').innerHTML=txBoxInner(cat,DFCorDRE()==='dre',mk);
+  /* a visao vem do seletor de regime: DFCorDRE() olha uma aba que nem sempre
+     existe e devolvia 'dfc' na DRE, fazendo a nota comparar a linha da DRE com
+     o valor do caixa */
+  document.getElementById('cellModalBody').innerHTML=txBoxInner(cat,REGIME!=='caixa',mk);
   document.getElementById('cellModal').classList.add('open');
 }
 function closeCell(){document.getElementById('cellModal').classList.remove('open');}
