@@ -16,11 +16,6 @@ E=("amana","topazio","consol"); M26=[str(x) for x in range(1,9)]; M25=["2508","2
 MD=[str(x) for x in range(1,10)]
 pr=lambda *a: print("   ",*a)
 SEM_CLIQUE=set(["Intercompany não casado","Juros Pagos*","Multas Pagas*","Descontos Obtidos*"])
-# 2025 veio como base de comparacao: o acumulado e do extrato e o resultado e
-# dos lancamentos classificados. A diferenca esta medida e declarada abaixo.
-GAP25=set(["amana|2508","amana|2509","amana|2510","amana|2512","amana|T25","amana|TT",
- "topazio|2508","topazio|2509","topazio|2510","topazio|T25","topazio|TT",
- "consol|2508","consol|2509","consol|2510","consol|2512","consol|T25","consol|TT"])
 
 falhas=collections.Counter()
 def chk(nome,ok,msg=""):
@@ -61,10 +56,10 @@ for e in E:
                 chk("grupo", abs(s-R2(gd["total"]))<0.005, "%s %s %s grupo %s x cats %s"%(e,m,g[:20],f(gd["total"]),f(s)))
         chk("resultado", abs(R2(tot)-R2(md.get("resultado")))<0.02, "%s %s resultado %s x cats %s"%(e,m,f(md.get("resultado")),f(tot)))
         si,ac=R2(md.get("saldo_inicial")),R2(md.get("acumulado"))
-        chk("saldo", abs(si+R2(md.get("resultado"))-ac)<0.02 or (e+"|"+m) in GAP25, "%s %s si %s + res %s != ac %s"%(e,m,f(si),f(md.get("resultado")),f(ac)))
+        chk("saldo", abs(si+R2(md.get("resultado"))-ac)<0.02, "%s %s si %s + res %s != ac %s"%(e,m,f(si),f(md.get("resultado")),f(ac)))
         if isinstance(md.get("contas"),list):
             chk("contas_sf", abs(R2(sum(c["sf"] for c in md["contas"]))-ac)<0.02, "%s %s contas sf %s x acumulado %s"%(e,m,f(sum(c["sf"] for c in md["contas"])),f(ac)))
-            chk("contas_si", abs(R2(sum(c["si"] for c in md["contas"]))-si)<0.02 or (e+"|"+m) in GAP25 or m.startswith("25"), "%s %s contas si %s x saldo inicial %s"%(e,m,f(sum(c["si"] for c in md["contas"])),f(si)))
+            chk("contas_si", abs(R2(sum(c["si"] for c in md["contas"]))-si)<0.02 or m.startswith("25"), "%s %s contas si %s x saldo inicial %s"%(e,m,f(sum(c["si"] for c in md["contas"])),f(si)))
 
 print("E) DFC acumulado = soma dos meses")
 def cats(ent,m):

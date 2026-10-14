@@ -29,9 +29,10 @@ Rodar à mão:
    eles não entram no ano.
 4. **Todo total é a soma do que está embaixo dele.**
 
-## Diferença conhecida e declarada
+## 2025
 
-Nos meses de **2025** (base de comparação), `saldo inicial + resultado` não
-fecha com o `acumulado`: o acumulado veio do extrato e o resultado, dos
-lançamentos classificados. Está medido em `varredura.py` (lista `GAP25`) —
-entre R$ 0,10 e R$ 3.157,98 por mês. Em 2026 fecha ao centavo.
+Os meses de 2025 fecham: `saldo inicial + resultado = acumulado`, como 2026.
+A diferença entre o saldo do extrato e os lançamentos classificados está numa
+linha com nome — **Movimento não classificado**, no grupo `2.9 Não classificado
+(2025)` — em vez de ficar como buraco. Entre R$ 0,10 e R$ 3.157,98 por mês,
+R$ 3.571,10 no total consolidado. Clicar na linha mostra de onde ela vem.
