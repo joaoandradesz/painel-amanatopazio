@@ -56,12 +56,12 @@ CSS=open(os.path.join(AQUI,"dash.css"),encoding="utf-8").read()
 JS=open(os.path.join(AQUI,"dash.js"),encoding="utf-8").read()
 HTML=f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Caixa · Grupo Amana / Topázio · Exact BR</title>
+<title>Grupo Amana e Topázio · Caixa e compromissos · Exact BR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>{CSS}</style></head><body>
 <header class="top"><img class="logo" src="data:image/png;base64,{BLACK}" alt="Exact BR">
-<div class="tt"><h1>Caixa e compromissos</h1><p id="sub"></p></div>
+<div class="tt"><h1>Grupo Amana e Topázio</h1><p class="st">Caixa e compromissos</p><p id="sub"></p></div>
 <div class="ents" id="ents"></div>
 <button class="pbt" onclick="window.print()">Exportar PDF</button></header>
 <main id="app"></main>

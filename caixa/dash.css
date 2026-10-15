@@ -4,7 +4,8 @@ html,body{font-family:'Inter',sans-serif;background:var(--off);color:var(--ink);
 .top{display:flex;align-items:center;gap:22px;padding:16px 30px;background:#fff;border-bottom:1px solid var(--g2);position:sticky;top:0;z-index:50;flex-wrap:wrap}
 .top .logo{height:21px}
 .top .tt h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.03em}
-.top .tt p{font-size:11px;color:var(--g5);margin-top:1px}
+.top .tt .st{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--orange);margin-top:1px;line-height:1.2}
+.top .tt #sub{font-size:10.5px;color:var(--g5);margin-top:3px}
 .ents{display:flex;gap:4px;margin-left:auto;background:var(--g2);padding:3px;border-radius:8px}
 .ents button{border:0;background:transparent;padding:7px 15px;border-radius:6px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;color:var(--g5)}
 .ents button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
