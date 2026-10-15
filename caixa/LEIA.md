@@ -1,48 +1,45 @@
-# Relatório de caixa · Grupo Amana
+# Dashboard de caixa · Amana · Topázio · Consolidado
 
-Posição de caixa e compromissos dos próximos 15 dias. **Atualizar segunda e sexta.**
+Publicado em **joaoandradesz.github.io/painel-amanatopazio/caixa.html**.
+Posição de caixa e compromissos dos próximos 15 dias, com clique até o título.
 
-## Como atualizar
+## Atualizar (segunda e sexta)
 
 ```
 cd ~/painel-amanatopazio
-python3 caixa/gera_caixa.py
-git commit -am "caixa DD/MM" && git push
+python3 caixa/coleta_dash.py     # lê o Omie das duas empresas (~3 min)
+python3 caixa/gera_dash.py       # monta o caixa.html
+git commit -am "caixa $(date +%d/%m)" && git push
 ```
 
-Leva uns 3 minutos — quase tudo é leitura do Omie. O arquivo publicado é
-`caixa.html`, na raiz do repositório. O relatório carimba na capa a data e a
-hora em que foi gerado, então dá para ver na hora se está velho.
+O dashboard carimba no topo a data e a hora da geração, então dá para ver na
+hora se está velho.
 
-Para simular outra data de corte: `python3 caixa/gera_caixa.py 23/10/2026`.
+## O que dá para fazer na tela
 
-## O que o script faz
-
-1. Lê o extrato de cada conta desde a última conciliação fechada e soma o que
-   já está **conciliado** — esse é o saldo de hoje.
-2. Levanta os títulos **em aberto** com vencimento nos próximos 15 dias, dos
-   dois lados.
-3. Monta a curva diária, o calendário, a tabela e o relatório inteiro.
+- **Amana · Topázio · Consolidado** nas abas do topo
+- **Clicar em qualquer dia** — no gráfico, no calendário ou na tabela — abre os
+  recebimentos e pagamentos daquele dia, com cliente/fornecedor, categoria,
+  empresa e valor
+- **Filtrar** as listas de a receber e a pagar por nome, categoria ou data
+- **Ocultar os títulos intercompany** Amana ↔ Topázio no consolidado
+- **Exportar PDF** pelo botão, no layout de impressão
 
 ## A âncora — atualizar todo fechamento
 
-No topo de `gera_caixa.py` está `ANCORA_DATA` e `ANCORA`: o saldo conciliado
-de cada conta na última data fechada, conferido contra o extrato do banco.
-**Depois de fechar um mês, atualize os dois.** Sem isso, o saldo de hoje vai
-acumulando movimento sobre uma base velha e se afasta do banco.
+`ANCORA_DATA` e `ANCORA`, no topo de `coleta_dash.py`: o saldo conciliado de
+cada conta na última data fechada, conferido contra o extrato. **Depois de
+fechar um mês, atualize os dois.** Sem isso o saldo de hoje acumula movimento
+sobre base velha e se afasta do banco.
 
-## Limite conhecido
+## Limites que o próprio painel declara
 
-O relatório mostra **posição e compromissos**, não previsão: só enxerga o que
-já está lançado. Medido em outubro/2026: dos R$ 200.386,32 pagos na primeira
-quinzena, só R$ 81.943,07 estavam no Omie no dia 30 de setembro — cobertura de
-**41%**. A página de alertas publica esse número a cada edição.
-
-Para virar previsão de verdade, os fornecedores recorrentes precisam ser
-lançados como previsto antes do dia 25. A lista está em
-`Fornecedores_Recorrentes_Amana_Topazio.xlsx`.
+- Mostra **posição e compromissos**, não previsão: só enxerga o que já está
+  lançado. Cobertura medida em outubro/2026: **41%**.
+- Quando o saldo apurado de uma empresa fica negativo, o painel abre um alerta
+  vermelho em vez de mostrar o número como se fosse verdade — foi o caso da
+  Topázio em outubro, sem o recebimento intercompany lançado.
 
 ## Credenciais
 
-Ficam em `~/.omie_<empresa>.json`, com permissão 600, **fora do repositório**.
-Nada de chave neste diretório.
+`~/.omie_<empresa>.json`, permissão 600, fora do repositório.
