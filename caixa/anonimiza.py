@@ -25,6 +25,8 @@ EMP=["Aurora Serviços Ltda","Vértice Comércio Ltda","Pedra Clara Distribuidor
  "Boa Vista Manutenção Ltda","Sol Nascente Insumos","Linha Azul Transportes Ltda","Casa Verde Lavanderia",
  "Ponto Norte Tecnologia","Vale Fundo Alimentos Ltda","Ilha Bela Amenidades","Costa Larga Logística Ltda",
  "Nova Era Consultoria","Céu Aberto Energia Ltda","Rota Firme Fretes"]
+PROTEGIDOS={"Amana","Topázio","Topazio","Consolidado","Consol","Sócios","Socios",
+  "Horizonte","Mirante","Grupo","Total","Caixa","Banco","Geral"}
 def chave(n): return int(hashlib.md5(unicodedata.normalize("NFKD",n).encode()).hexdigest()[:8],16)
 def generico(n):
     u=n.upper()
@@ -49,7 +51,7 @@ def anonimiza(html,rotulo):
     def walk(o,ch=None):
         if isinstance(o,dict): return {k:walk(v,k) for k,v in o.items()}
         if isinstance(o,list): return [walk(v,ch) for v in o]
-        if isinstance(o,str) and ch in CH and len(o)>4:
+        if isinstance(o,str) and ch in CH and len(o)>4 and o.strip() not in PROTEGIDOS:
             if o not in vistos: vistos[o]=troca(o)
             return vistos[o]
         return o
