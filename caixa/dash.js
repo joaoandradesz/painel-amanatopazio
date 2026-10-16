@@ -1,13 +1,48 @@
-let ENT='consol', SEMINTER=false;
+let ENT='consol', SEMINTER=false, PRE='15';
 const f=v=>(v==null?'—':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}));
+const br=d=>d.split('/').reverse().join('-');                 // 15/10/2026 -> 2026-10-15
+const pt=i=>i.split('-').reverse().join('/');                 // 2026-10-15 -> 15/10/2026
+const dia=i=>new Date(i+'T12:00');
+const addD=(i,n)=>{const d=dia(i);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+const HOJE=br(D.meta.hoje), LIM=br(D.meta.fim);
+let INI=HOJE, FIM=addD(HOJE,15);
+function setPre(p){PRE=p;
+  if(p==='15'){INI=HOJE;FIM=addD(HOJE,15);}
+  else if(p==='30'){INI=HOJE;FIM=addD(HOJE,30);}
+  else if(p==='60'){INI=HOJE;FIM=addD(HOJE,60);}
+  else if(p==='mes'){const d=dia(HOJE);INI=HOJE;FIM=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);}
+  else if(p==='prox'){const d=dia(HOJE);INI=new Date(d.getFullYear(),d.getMonth()+1,1).toISOString().slice(0,10);
+                      FIM=new Date(d.getFullYear(),d.getMonth()+2,0).toISOString().slice(0,10);}
+  if(FIM>LIM)FIM=LIM; if(INI<HOJE)INI=HOJE; if(INI>FIM)INI=FIM;
+  render();}
+function setData(qual,v){
+  if(!v)return;
+  if(qual==='ini'){INI=v<HOJE?HOJE:(v>LIM?LIM:v);if(INI>FIM)FIM=INI;}
+  else{FIM=v>LIM?LIM:(v<HOJE?HOJE:v);if(FIM<INI)INI=FIM;}
+  PRE='';render();}
+const nDias=()=>Math.round((dia(FIM)-dia(INI))/86400000)+1;
+function periodoBar(){
+  const bt=(p,r)=>`<button class="${PRE===p?'on':''}" onclick="setPre('${p}')">${r}</button>`;
+  return `<div class="per">
+    <div class="pres">${bt('15','15 dias')}${bt('30','30 dias')}${bt('60','60 dias')}${bt('mes','até o fim do mês')}${bt('prox','mês que vem')}</div>
+    <div class="pdt"><label>de</label><input type="date" value="${INI}" min="${HOJE}" max="${LIM}" onchange="setData('ini',this.value)">
+    <label>até</label><input type="date" value="${FIM}" min="${HOJE}" max="${LIM}" onchange="setData('fim',this.value)">
+    <span class="pn">${nDias()} dias</span></div></div>`;}
 const k=v=>Math.abs(v)>=1000?(v/1000).toFixed(0)+' mil':v.toFixed(0);
 const sg=v=>(v>0?'+':(v<0?'−':''))+f(Math.abs(v));
 const E=()=>D.ents[ENT];
-const itens=()=>E().itens.filter(i=>!(SEMINTER&&/POUSADA TOPAZIO|AMANA EMPREENDIMENTOS/i.test(i.nome)));
+const dentro=d=>{const x=br(d);return x>=INI&&x<=FIM;};
+const itens=()=>E().itens.filter(i=>dentro(i.d)&&!(SEMINTER&&/POUSADA TOPAZIO|AMANA EMPREENDIMENTOS/i.test(i.nome)));
+const todos=()=>E().itens.filter(i=>!(SEMINTER&&/POUSADA TOPAZIO|AMANA EMPREENDIMENTOS/i.test(i.nome)));
 function serie(){
-  const por={}; itens().forEach(i=>{const a=por[i.d]||(por[i.d]=[0,0]); a[i.lado==='receber'?0:1]+=i.v;});
-  let s=E().saldo_hoje; return D.dias.map(d=>{const[e,p]=por[d]||[0,0]; s=Math.round((s+e-p)*100)/100;
-    return{d,lbl:d.slice(0,2),dow:['dom','seg','ter','qua','qui','sex','sáb'][new Date(d.split('/').reverse().join('-')+'T12:00').getDay()],ent:e,sai:p,saldo:s};});}
+  const por={}; todos().forEach(i=>{const a=por[i.d]||(por[i.d]=[0,0]); a[i.lado==='receber'?0:1]+=i.v;});
+  let s=E().saldo_hoje; const out=[]; let d=HOJE;
+  while(d<=FIM){
+    const p=pt(d), [e,pg]=por[p]||[0,0];
+    s=Math.round((s+e-pg)*100)/100;
+    if(d>=INI)out.push({d:p,iso:d,lbl:p.slice(0,2),dow:['dom','seg','ter','qua','qui','sex','sáb'][dia(d).getDay()],ent:e,sai:pg,saldo:s});
+    d=addD(d,1);}
+  return out;}
 function kpis(S){
   const mn=S.reduce((a,b)=>b.saldo<a.saldo?b:a,S[0]);
   const rec=itens().filter(i=>i.lado==='receber').reduce((a,b)=>a+b.v,0);
@@ -41,8 +76,18 @@ function grafico(S){
   <text x="${bx+10}" y="${cy+28}" font-size="7.5" fill="#F97316" font-weight="700" letter-spacing="1">MENOR SALDO</text>
   <text x="${bx+10}" y="${cy+40}" font-size="12" fill="#fff" font-weight="800">${f(S[mi].saldo)}</text>
   ${rot}${hot}</svg>`;}
+function semanal(S){
+  const sem={};
+  S.forEach(x=>{const d=dia(x.iso); const seg=new Date(d); seg.setDate(d.getDate()-((d.getDay()+6)%7));
+    const kk=seg.toISOString().slice(0,10); (sem[kk]=sem[kk]||{ini:x.d,fim:x.d,ent:0,sai:0,saldo:0});
+    sem[kk].fim=x.d; sem[kk].ent+=x.ent; sem[kk].sai+=x.sai; sem[kk].saldo=x.saldo;});
+  const L=Object.values(sem);
+  return `<table><thead><tr><th>Semana</th><th class="n">Entradas</th><th class="n">Saídas</th><th class="n">Líquido</th><th class="n">Saldo ao fim</th></tr></thead><tbody>
+  ${L.map(w=>`<tr><td class="l">${w.ini.slice(0,5)} a ${w.fim.slice(0,5)}</td><td class="n ${w.ent?'vd':'dim'}">${w.ent?f(w.ent):'—'}</td>
+   <td class="n ${w.sai?'vm':'dim'}">${w.sai?f(w.sai):'—'}</td><td class="n ${w.ent-w.sai>=0?'vd':'vm'}">${sg(w.ent-w.sai)}</td><td class="n">${f(w.saldo)}</td></tr>`).join('')}
+  </tbody></table>`;}
 function calendario(S){
-  const dow=new Date(S[0].d.split('/').reverse().join('-')+'T12:00').getDay();
+  const dow=dia(S[0].iso).getDay();
   const mn=S.reduce((a,b)=>b.saldo<a.saldo?b:a,S[0]);
   const mx=Math.max(...S.map(x=>Math.abs(x.ent-x.sai)))||1;
   let h=['DOM','SEG','TER','QUA','QUI','SEX','SÁB'].map(d=>`<div class="hd">${d}</div>`).join('');
@@ -59,7 +104,7 @@ function lista(lado,S){
   const rows=L.map(i=>`<tr class="bl" data-t="${(i.nome+' '+i.cat+' '+i.d).toLowerCase()}"><td>${i.d.slice(0,5)}</td><td class="l">${i.nome}</td>
     <td style="color:#6B7280;font-size:10.5px">${i.cat||'—'}</td>${ENT==='consol'?`<td style="font-size:10.5px">${i.emp||''}</td>`:''}
     <td class="n ${lado==='receber'?'vd':'vm'}">${f(i.v)}</td></tr>`).join('');
-  return `<div class="sec"><h2>${lado==='receber'?'A receber':'A pagar'} · próximos 15 dias</h2>
+  return `<div class="sec"><h2>${lado==='receber'?'A receber':'A pagar'} · ${INI===HOJE?'próximos '+nDias()+' dias':pt(INI)+' a '+pt(FIM)}</h2>
     <div class="sub">${L.length} títulos em aberto, somando ${f(tot)}</div>
     <input class="busca" placeholder="filtrar por nome, categoria ou data…" oninput="filtrar(this)">
     <table><thead><tr><th>Venc.</th><th>${lado==='receber'?'Cliente':'Fornecedor'}</th><th>Categoria</th>${ENT==='consol'?'<th>Empresa</th>':''}<th class="n">Valor</th></tr></thead>
@@ -87,7 +132,7 @@ function render(){
   document.getElementById('ents').innerHTML=['amana','topazio','consol']
     .map(e=>`<button class="${e===ENT?'on':''}" onclick="setEnt('${e}')">${D.ents[e].nome}</button>`).join('');
   document.getElementById('sub').textContent=
-    `${D.meta.hoje} a ${D.meta.fim} · gerado em ${D.meta.gerado} · âncora de conciliação ${D.meta.ancora}`;
+    `período de ${pt(INI)} a ${pt(FIM)} · gerado em ${D.meta.gerado} · âncora de conciliação ${D.meta.ancora}`;
   const neg=x.saldo_hoje<0;
   const alerta=neg?`<div class="alert"><span class="tg">Conciliação pendente</span><p>O saldo apurado para <b>${x.nome}</b> está negativo em <b>${f(x.saldo_hoje)}</b>, o que não corresponde à realidade do banco. Há <b>${x.naoconc} lançamentos não conciliados</b> no período e o recebimento intercompany da compra de diárias ainda não foi lançado deste lado. Trate os números desta aba como incompletos até a conciliação de outubro fechar.</p></div>`:'';
   const inter=x.inter?`<label style="font-size:11.5px;color:#374151;display:flex;gap:7px;align-items:center;margin-bottom:12px"><input type="checkbox" ${SEMINTER?'checked':''} onchange="toggleInter()"> ocultar os ${x.inter} títulos intercompany (Amana ↔ Topázio)</label>`:'';
@@ -97,16 +142,18 @@ function render(){
       <td class="l">${d.d.slice(0,5)}</td><td style="color:#6B7280;font-size:10.5px">${d.dow}</td>
       <td class="n ${d.ent?'vd':'dim'}">${d.ent?f(d.ent):'—'}</td><td class="n ${d.sai?'vm':'dim'}">${d.sai?f(d.sai):'—'}</td>
       <td class="n ${net>0?'vd':(net<0?'vm':'dim')}">${net?sg(net):'—'}</td><td class="n">${f(d.saldo)}</td></tr>`;}).join('');
-  document.getElementById('app').innerHTML=alerta+`
+  document.getElementById('app').innerHTML=periodoBar()+alerta+`
   <div class="kpis">
     <div class="kpi"><div class="e">Caixa hoje</div><div class="v ${x.saldo_hoje<0?'vm':'o'}">${f(x.saldo_hoje)}</div><div class="s">era ${f(x.contas.reduce((a,b)=>a+b.ini,0))} na âncora de ${D.meta.ancora}</div></div>
-    <div class="kpi"><div class="e">A receber · 15 dias</div><div class="v vd">${f(K.rec)}</div><div class="s">${itens().filter(i=>i.lado==='receber').length} títulos em aberto</div></div>
-    <div class="kpi"><div class="e">A pagar · 15 dias</div><div class="v vm">${f(K.pag)}</div><div class="s">${itens().filter(i=>i.lado==='pagar').length} títulos em aberto</div></div>
+    <div class="kpi"><div class="e">A receber · ${nDias()} dias</div><div class="v vd">${f(K.rec)}</div><div class="s">${itens().filter(i=>i.lado==='receber').length} títulos em aberto</div></div>
+    <div class="kpi"><div class="e">A pagar · ${nDias()} dias</div><div class="v vm">${f(K.pag)}</div><div class="s">${itens().filter(i=>i.lado==='pagar').length} títulos em aberto</div></div>
     <div class="kpi"><div class="e">Menor saldo</div><div class="v ${K.mn.saldo<0?'vm':''}">${f(K.mn.saldo)}</div><div class="s">em ${K.mn.d} · termina o período em ${f(K.fim)}</div></div>
   </div>
   <div class="sec"><h2>Fluxo de caixa diário</h2><div class="sub">Clique em qualquer dia para ver os títulos. A linha é o saldo; as barras, o que entra e o que sai.</div>
     ${inter}${grafico(S)}</div>
-  <div class="sec"><h2>Calendário de caixa</h2><div class="sub">O líquido do dia e o saldo com que a empresa dorme</div>${calendario(S)}</div>
+  <div class="sec"><h2>${S.length<=45?'Calendário de caixa':'Resumo por semana'}</h2>
+    <div class="sub">${S.length<=45?'O líquido do dia e o saldo com que a empresa dorme':'O período tem '+S.length+' dias — acima de 45 o calendário vira resumo semanal'}</div>
+    ${S.length<=45?calendario(S):semanal(S)}</div>
   <div class="sec"><h2>Dia a dia</h2><div class="sub">Clique na linha para abrir os títulos daquele dia</div>
     <table><thead><tr><th>Dia</th><th></th><th class="n">Entradas</th><th class="n">Saídas</th><th class="n">Líquido</th><th class="n">Saldo acumulado</th></tr></thead>
     <tbody>${linhas}<tr class="tot"><td>Total</td><td></td><td class="n vd">${f(K.rec)}</td><td class="n vm">${f(K.pag)}</td><td class="n ${K.rec-K.pag>=0?'vd':'vm'}">${sg(K.rec-K.pag)}</td><td class="n">${f(K.fim)}</td></tr></tbody></table></div>
@@ -114,8 +161,8 @@ function render(){
   <div class="sec"><h2>Posição por conta</h2><div class="sub">Âncora de ${D.meta.ancora} mais o movimento já conciliado desde então</div>
     <table><thead><tr><th>Conta</th><th class="n">Âncora</th><th class="n">Movimento</th><th class="n">Hoje</th><th class="n">Não conciliados</th></tr></thead>
     <tbody>${contas}<tr class="tot"><td>Total</td><td class="n">${f(x.contas.reduce((a,b)=>a+b.ini,0))}</td><td class="n">${sg(x.contas.reduce((a,b)=>a+b.mov,0))}</td><td class="n">${f(x.saldo_hoje)}</td><td class="n">${x.naoconc||'—'}</td></tr></tbody></table>
-    <div class="nota"><b>Vencido e não pago:</b> ${f(x.atrasados.pagar)} a pagar e ${f(x.atrasados.receber)} a receber, em ${x.atrasados.n} títulos fora da janela acima.
-    <b>GetNet agendada:</b> ${f(x.getnet.bruto)} brutos em ${x.getnet.n} recebimentos, ${f(Math.abs(x.getnet.taxa))} de taxa — ${f(x.getnet.bruto+x.getnet.taxa)} líquidos, já contratados.
+    <div class="nota"><b>Vencido e não pago:</b> ${f(x.atrasados.pagar)} a pagar e ${f(x.atrasados.receber)} a receber, em ${x.atrasados.n} títulos vencidos antes de hoje, fora do período selecionado.
+    <b>Horizonte carregado:</b> ${D.meta.horizonte} dias de títulos em aberto, de ${D.meta.hoje} a ${D.meta.fim} — o seletor de período trabalha dentro disso.
     <br><br>Este painel mostra <b>posição e compromissos</b>, não previsão: enxerga só o que já está lançado no Omie. Em outubro, dos R$ 200.386,32 pagos pela Amana na primeira quinzena, apenas R$ 81.943,07 estavam lançados no dia 30 de setembro — cobertura de <b>41%</b>. Lançar os recorrentes antes do dia 25 fecha 98% dessa lacuna.</div></div>`;
   document.querySelectorAll('.hot').forEach(h=>h.addEventListener('click',()=>abrirDia(h.dataset.d)));}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fechar();});

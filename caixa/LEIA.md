@@ -1,13 +1,13 @@
 # Dashboard de caixa · Amana · Topázio · Consolidado
 
 Publicado em **joaoandradesz.github.io/painel-amanatopazio/caixa.html**.
-Posição de caixa e compromissos dos próximos 15 dias, com clique até o título.
+Posição de caixa e compromissos, com **seletor de período** e clique até o título.
 
 ## Atualizar (segunda e sexta)
 
 ```
 cd ~/painel-amanatopazio
-python3 caixa/coleta_dash.py     # lê o Omie das duas empresas (~3 min)
+python3 caixa/coleta_dash.py     # lê o Omie das duas empresas, 90 dias de títulos (~3 min)
 python3 caixa/gera_dash.py       # monta o caixa.html
 git commit -am "caixa $(date +%d/%m)" && git push
 ```
@@ -17,6 +17,7 @@ hora se está velho.
 
 ## O que dá para fazer na tela
 
+- **Escolher o período**: atalhos de 15, 30 e 60 dias, até o fim do mês e mês que vem, ou as datas de e até na mão. O horizonte carregado é de **90 dias** — o seletor trabalha dentro dele
 - **Amana · Topázio · Consolidado** nas abas do topo
 - **Clicar em qualquer dia** — no gráfico, no calendário ou na tabela — abre os
   recebimentos e pagamentos daquele dia, com cliente/fornecedor, categoria,

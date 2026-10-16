@@ -26,31 +26,15 @@ for e,x in ents.items():
     for i in x["itens"]: i["emp"]=x["nome"]
 ents["consol"]=cons
 
-# serie diaria por entidade
-dias=[]
-d=HOJE
-while d<=FIM: dias.append(d); d+=datetime.timedelta(days=1)
+# a janela e escolhida na tela; aqui so marcamos o intercompany
 for e,x in ents.items():
     x["inter"]=sum(1 for i in x["itens"] if any(t in i["nome"].upper() for t in INTER))
-    por=collections.defaultdict(lambda:[0.0,0.0])
-    for i in x["itens"]:
-        por[i["d"]][0 if i["lado"]=="receber" else 1]+=i["v"]
-    saldo=R2(sum(c["hoje"] for c in x["contas"])); serie=[]
-    for dd in dias:
-        s=dd.strftime("%d/%m/%Y"); ent,sai=por.get(s,(0.0,0.0))
-        saldo=R2(saldo+ent-sai)
-        serie.append({"d":s,"lbl":dd.strftime("%d"),"dow":DOW[int(dd.strftime("%w"))],
-                      "ent":R2(ent),"sai":R2(sai),"saldo":saldo})
-    x["serie"]=serie
     x["saldo_hoje"]=R2(sum(c["hoje"] for c in x["contas"]))
-    x["receber"]=R2(sum(i["v"] for i in x["itens"] if i["lado"]=="receber"))
-    x["pagar"]=R2(sum(i["v"] for i in x["itens"] if i["lado"]=="pagar"))
-    x["saldo_fim"]=serie[-1]["saldo"] if serie else x["saldo_hoje"]
-    mn=min(serie,key=lambda y:y["saldo"]) if serie else {"saldo":x["saldo_hoje"],"d":D["hoje"]}
-    x["menor"]={"v":mn["saldo"],"d":mn["d"]}
+    x["ancora_total"]=R2(sum(c["ini"] for c in x["contas"]))
     x["naoconc"]=sum(c["naoconc"] for c in x["contas"])
+
 BLOB=json.dumps({"meta":{k:D[k] for k in ("hoje","fim","ancora","gerado")},
-                 "dias":[d.strftime("%d/%m/%Y") for d in dias],
+                 "horizonte":D.get("horizonte",90),
                  "ents":{k:{kk:vv for kk,vv in v.items()} for k,v in ents.items()}},ensure_ascii=False)
 CSS=open(os.path.join(AQUI,"dash.css"),encoding="utf-8").read()
 JS=open(os.path.join(AQUI,"dash.js"),encoding="utf-8").read()
@@ -72,7 +56,7 @@ HTML=f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 {JS}</script></body></html>"""
 open(os.path.join(os.path.dirname(AQUI),"caixa.html"),"w",encoding="utf-8").write(HTML)
 f=lambda v: format(R2(v),",.2f").replace(",","@").replace(".",",").replace("@",".")
-print("gravado caixa.html | %d bytes"%len(HTML))
+print("gravado caixa.html | %d bytes | horizonte de %d dias"%(len(HTML),D.get("horizonte",90)))
 for k,x in ents.items():
-    print("  %-11s saldo %14s | receber %13s | pagar %13s | menor %14s em %s"%(
-        x["nome"],f(x["saldo_hoje"]),f(x["receber"]),f(x["pagar"]),f(x["menor"]["v"]),x["menor"]["d"][:5]))
+    print("  %-11s saldo %14s | %4d titulos no horizonte | %d nao conciliados"%(
+        x["nome"],f(x["saldo_hoje"]),len(x["itens"]),x["naoconc"]))

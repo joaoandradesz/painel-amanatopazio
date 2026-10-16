@@ -51,9 +51,11 @@ def titulos(emp,ep,cn,raiz):
         p+=1
     return out
 
+HORIZONTE=90   # dias de titulos carregados; a tela filtra dentro disso
+
 def coleta(HOJE):
-    FIM=HOJE+datetime.timedelta(days=15)
-    out={"hoje":HOJE.strftime("%d/%m/%Y"),"fim":FIM.strftime("%d/%m/%Y"),
+    FIM=HOJE+datetime.timedelta(days=HORIZONTE)
+    out={"hoje":HOJE.strftime("%d/%m/%Y"),"fim":FIM.strftime("%d/%m/%Y"),"horizonte":HORIZONTE,
          "ancora":ANCORA_DATA.strftime("%d/%m/%Y"),
          "gerado":datetime.datetime.now().strftime("%d/%m/%Y às %H:%M"),"ents":{}}
     for emp,cfg in EMP.items():
