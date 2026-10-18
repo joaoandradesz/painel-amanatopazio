@@ -65,7 +65,8 @@ def compara(D):
             try: dd=dt(d["d"])
             except Exception: continue
             if ini<=dd<=hoje and int(cod) not in previstos:
-                L["surpresa"].append({"id":cod,"d":d["d"],"v":d["v"],"st":d["st"]})
+                L["surpresa"].append({"id":cod,"d":d["d"],"v":d["v"],"st":d["st"],
+                    "nome":d.get("nome","—"),"lado":d.get("lado","")})
         som=lambda k: R2(sum(y.get("real",y["v"]) for y in L[k]))
         out["ents"][e]={"nome":x["nome"],
             "saldo_ant":(ant["ents"].get(e) or {}).get("saldo"),

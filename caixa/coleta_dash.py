@@ -82,7 +82,8 @@ def coleta(HOJE):
                 st=(t.get("status_titulo") or "").upper()
                 if st in ("PAGO","RECEBIDO","CANCELADO"):
                     # guardamos o desfecho para o de-para previsto x realizado
-                    desfecho[t.get("codigo_lancamento_omie")]={"st":st.title(),"v":R2(t.get("valor_documento")),"d":v}
+                    desfecho[t.get("codigo_lancamento_omie")]={"st":st.title(),"v":R2(t.get("valor_documento")),"d":v,
+                        "nome":NM.get(t.get("codigo_cliente_fornecedor"),"—"),"lado":lado}
                     continue
                 reg={"id":t.get("codigo_lancamento_omie"),"lado":lado,"d":v,
                      "nome":NM.get(t.get("codigo_cliente_fornecedor"),"—"),
