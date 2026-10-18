@@ -127,6 +127,37 @@ function abrirDia(d){
 function fechar(){document.getElementById('mbg').classList.remove('on');}
 function setEnt(e){ENT=e;render();}
 function toggleInter(){SEMINTER=!SEMINTER;render();}
+
+function deparar(){
+  const P=D.deparar; if(!P||!P.ents[ENT])return '';
+  const x=P.ents[ENT], n=x.n, v=x.v;
+  const tile=(e,val,sub,cls)=>`<div class="kpi"><div class="e">${e}</div><div class="v ${cls||''}" style="font-size:22px">${val}</div><div class="s">${sub}</div></div>`;
+  const li=(A,cor)=>A.length?`<table><thead><tr><th>Venc.</th><th>Nome</th><th class="n">Valor</th></tr></thead><tbody>
+    ${A.map(i=>`<tr><td>${i.d.slice(0,5)}</td><td class="l">${i.nome||'—'}</td><td class="n ${cor}">${f(i.real||i.v)}</td></tr>`).join('')}
+    </tbody></table>`:'<p style="font-size:12px;color:#9CA3AF">nada aqui</p>';
+  const dif=x.saldo_hoje-x.saldo_ant;
+  return `<div class="sec"><h2>Previsto × realizado · desde ${P.de}</h2>
+   <div class="sub">O que o painel dizia em ${P.de} contra o que aconteceu até ${P.ate} — ${P.dias} dias</div>
+   <p class="body" style="font-size:12.5px;line-height:1.6;color:#374151;margin-bottom:12px">
+     O caixa saiu de <b>${f(x.saldo_ant)}</b> para <b>${f(x.saldo_hoje)}</b>, ${dif>=0?'uma entrada líquida':'uma saída líquida'} de <b>${f(Math.abs(dif))}</b>.
+     Dos títulos que o painel já conhecia e que venceram no período, <b>${f(v.aconteceu+v.mudou)}</b> se confirmaram e <b>${f(v.escorregou)}</b> escorregaram.
+     Apareceram <b>${f(v.surpresa)}</b> em ${n.surpresa} títulos que não existiam no sistema em ${P.de}.</p>
+   <div class="kpis" style="margin-bottom:14px;border:0;padding:14px 0;border-top:1px solid var(--g2);border-bottom:1px solid var(--g2)">
+     ${tile('Confirmou',f(v.aconteceu+v.mudou),n.aconteceu+n.mudou+' títulos','vd')}
+     ${tile('Escorregou',f(v.escorregou),n.escorregou+' venceram e não foram liquidados','vm')}
+     ${tile('Surpresa',f(v.surpresa),n.surpresa+' não estavam lançados','vm')}
+     ${tile('Acerto da previsão',(x.acerto==null?'—':x.acerto+'%'),'do previsto que se confirmou','o')}
+   </div>
+   <div class="grid2">
+     <div><h2 style="font-size:10px;letter-spacing:.14em;color:#DC2626;margin-bottom:6px">O QUE ESCORREGOU</h2>${li(x.listas.escorregou,'vm')}</div>
+     <div><h2 style="font-size:10px;letter-spacing:.14em;color:#DC2626;margin-bottom:6px">AS MAIORES SURPRESAS</h2>${li(x.listas.surpresa,'vm')}</div>
+   </div>
+   <div class="nota"><b>Como ler os dois indicadores.</b>
+     <b>Acerto da previsão (${x.acerto==null?'—':x.acerto+'%'})</b>: do que o painel previa e já venceu, quanto de fato aconteceu. Mede se o que está lançado é confiável.
+     <b>Cobertura (${x.cobertura==null?'—':x.cobertura+'%'})</b>: de tudo que aconteceu no período, quanto já estava lançado em ${P.de}. Mede se o sistema enxerga o mês antes dele acontecer.
+     <br><br>Os dois precisam subir, mas não é a mesma coisa: dá para acertar tudo que se prevê e ainda assim prever pouco. Lançar os recorrentes antes do dia 25 move a cobertura; pagar na data lançada move o acerto.</div>
+  </div>`;}
+
 function render(){
   const x=E(),S=serie(),K=kpis(S);
   document.getElementById('ents').innerHTML=['amana','topazio','consol']
@@ -149,6 +180,7 @@ function render(){
     <div class="kpi"><div class="e">A pagar · ${nDias()} dias</div><div class="v vm">${f(K.pag)}</div><div class="s">${itens().filter(i=>i.lado==='pagar').length} títulos em aberto</div></div>
     <div class="kpi"><div class="e">Menor saldo</div><div class="v ${K.mn.saldo<0?'vm':''}">${f(K.mn.saldo)}</div><div class="s">em ${K.mn.d} · termina o período em ${f(K.fim)}</div></div>
   </div>
+  ${deparar()}
   <div class="sec"><h2>Fluxo de caixa diário</h2><div class="sub">Clique em qualquer dia para ver os títulos. A linha é o saldo; as barras, o que entra e o que sai.</div>
     ${inter}${grafico(S)}</div>
   <div class="sec"><h2>${S.length<=45?'Calendário de caixa':'Resumo por semana'}</h2>

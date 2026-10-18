@@ -71,7 +71,7 @@ def coleta(HOJE):
                    if not (x.get("cDesCliente") or "").startswith("SALDO") and (x.get("cSituacao") or "")!="Conciliado")
             a=cfg["ancora"].get(nome,0.0)
             contas.append({"n":nome,"ini":R2(a),"mov":R2(mv),"hoje":R2(a+mv),"naoconc":nc})
-        itens=[];atr=[]
+        itens=[];atr=[];desfecho={}
         for lado,ep,cn,raiz in (("receber","financas/contareceber","ListarContasReceber","conta_receber_cadastro"),
                                 ("pagar","financas/contapagar","ListarContasPagar","conta_pagar_cadastro")):
             for t in titulos(emp,ep,cn,raiz):
@@ -80,8 +80,12 @@ def coleta(HOJE):
                 try: d=dt(v)
                 except Exception: continue
                 st=(t.get("status_titulo") or "").upper()
-                if st in ("PAGO","RECEBIDO","CANCELADO"): continue
-                reg={"lado":lado,"d":v,"nome":NM.get(t.get("codigo_cliente_fornecedor"),"—"),
+                if st in ("PAGO","RECEBIDO","CANCELADO"):
+                    # guardamos o desfecho para o de-para previsto x realizado
+                    desfecho[t.get("codigo_lancamento_omie")]={"st":st.title(),"v":R2(t.get("valor_documento")),"d":v}
+                    continue
+                reg={"id":t.get("codigo_lancamento_omie"),"lado":lado,"d":v,
+                     "nome":NM.get(t.get("codigo_cliente_fornecedor"),"—"),
                      "cat":CT.get(t.get("codigo_categoria")) or ("rateio" if not t.get("codigo_categoria") else t.get("codigo_categoria")),
                      "v":R2(t.get("valor_documento")),"doc":(t.get("numero_documento") or "").strip(),
                      "st":st.title()}
@@ -90,17 +94,23 @@ def coleta(HOJE):
         g=call(emp,"financas/extrato","ListarExtrato",
                {"nCodCC":cfg["getnet"],"dPeriodoInicial":HOJE.strftime("%d/%m/%Y"),"dPeriodoFinal":FIM.strftime("%d/%m/%Y")})
         pv=[x for x in (g.get("listaMovimentos") or []) if (x.get("cSituacao") or "")=="Previsto"]
-        out["ents"][emp]={"nome":cfg["nome"],"contas":contas,"itens":itens,
+        out["ents"][emp]={"nome":cfg["nome"],"contas":contas,"itens":itens,"desfecho":desfecho,
             "atrasados":{"n":len(atr),"receber":R2(sum(x["v"] for x in atr if x["lado"]=="receber")),
-                         "pagar":R2(sum(x["v"] for x in atr if x["lado"]=="pagar"))},
+                         "pagar":R2(sum(x["v"] for x in atr if x["lado"]=="pagar")),
+                         "ids":[x["id"] for x in atr]},
             "getnet":{"n":len(pv),"bruto":R2(sum(x["nValorDocumento"] for x in pv if x["nValorDocumento"]>0)),
                       "taxa":R2(sum(x["nValorDocumento"] for x in pv if x["nValorDocumento"]<0))}}
         print("  %-8s contas %d | titulos na janela %d | atrasados %d"%(emp,len(contas),len(itens),len(atr)))
     return out
 
 if __name__=="__main__":
+    import historia
     H=datetime.datetime.strptime(sys.argv[1],"%d/%m/%Y").date() if len(sys.argv)>1 else datetime.date.today()
     D=coleta(H)
+    # compara com o retrato da rodada anterior ANTES de gravar o de hoje
+    D["deparar"]=historia.compara(D)
+    foto=historia.salva(D)
+    print("  retrato guardado: historico/%s%s"%(foto,"" if D["deparar"] else "  (primeira rodada, nada a comparar)"))
     json.dump(D,open(os.path.join(os.path.dirname(os.path.abspath(__file__)),"dados_caixa.json"),"w"),ensure_ascii=False)
     f=lambda v: format(R2(v),",.2f").replace(",","@").replace(".",",").replace("@",".")
     for e,x in D["ents"].items():

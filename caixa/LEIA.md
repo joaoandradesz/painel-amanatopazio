@@ -26,6 +26,31 @@ hora se está velho.
 - **Ocultar os títulos intercompany** Amana ↔ Topázio no consolidado
 - **Exportar PDF** pelo botão, no layout de impressão
 
+## Previsto × realizado
+
+A cada rodada o `coleta_dash.py` guarda um retrato em `caixa/historico/AAAA-MM-DD.json`
+— saldo e a lista de títulos em aberto dos 15 dias seguintes, com código. Na
+rodada seguinte ele compara e classifica cada título daquele retrato:
+
+| balde | o que é |
+|---|---|
+| **confirmou** | foi pago ou recebido |
+| **escorregou** | venceu e continua em aberto |
+| **surpresa** | foi liquidado sem estar no retrato — entrou depois |
+
+Dois indicadores saem disso, e eles **não** medem a mesma coisa:
+
+- **Acerto da previsão** — do que estava previsto e já venceu, quanto aconteceu.
+  Mede se o que está lançado é confiável.
+- **Cobertura** — de tudo que aconteceu, quanto já estava lançado no retrato
+  anterior. Mede se o sistema enxerga o mês antes de ele acontecer.
+
+Para semear o histórico com uma data passada:
+
+    python3 caixa/semeia_historico.py 30/09/2026 '{"amana":649598.21,"topazio":12683.18}'
+
+Os retratos ficam no repositório — não apague, é a série histórica.
+
 ## A âncora — atualizar todo fechamento
 
 `ANCORA_DATA` e `ANCORA`, no topo de `coleta_dash.py`: o saldo conciliado de

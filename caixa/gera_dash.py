@@ -34,6 +34,7 @@ for e,x in ents.items():
     x["naoconc"]=sum(c["naoconc"] for c in x["contas"])
 
 BLOB=json.dumps({"meta":{k:D[k] for k in ("hoje","fim","ancora","gerado")},
+                 "deparar":D.get("deparar"),
                  "horizonte":D.get("horizonte",90),
                  "ents":{k:{kk:vv for kk,vv in v.items()} for k,v in ents.items()}},ensure_ascii=False)
 CSS=open(os.path.join(AQUI,"dash.css"),encoding="utf-8").read()
