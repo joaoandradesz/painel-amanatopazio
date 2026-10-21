@@ -12,7 +12,7 @@ EMP={
  "amana":{"nome":"Amana","ancora":{
     "Bradesco conta corrente":1.00,"Santander conta corrente":0.00,"InfinitePay":11921.00,
     "Mercado Pago":632.55,"Santander ContaMax":236178.41,"Bradesco Invest Fácil":10045.43,
-    "Santander CDB DI PJ":312008.23,"Bradesco CDB DI PJ":78811.59,"GetNet":0.00},
+    "Santander CDB DI PJ":312008.23,"Bradesco CDB DI PJ":78779.08,"GetNet":0.00},
   "contas":[(5177546899,"Santander conta corrente"),(5196586286,"Santander ContaMax"),
     (5199925490,"Santander CDB DI PJ"),(5177543696,"Bradesco conta corrente"),
     (5196707350,"Bradesco Invest Fácil"),(5226179398,"Bradesco CDB DI PJ"),

@@ -194,12 +194,19 @@ def main():
         ent["acq"][MES]={}
         r,c=kpis(A,None if e=="amana" else OC,None if e=="amana" else ADR)
         D["resumo"][e][MES]=r; ent["comp"][MES]=c
-        # acumulados: soma o mes novo no T e no TT; lista = concatenacao onde a categoria tem linha
-        cs=cats_do_mes(A)
-        for tot in ("T","TT"):
-            soma_em(ent["dre"][tot],A); ordena(ent["dre"][tot])
-            for cat in cs:
-                if cat in X: ent["tx"].setdefault(tot,{}).setdefault(cat,[]).extend(X[cat])
+        # acumulados REFEITOS a partir dos meses (idempotente: rodar de novo nao dobra)
+        m26=[str(x) for x in D["anos"][ANO]["meses"]]+([MES] if MES not in [str(x) for x in D["anos"][ANO]["meses"]] else [])
+        m25=[str(x) for x in D["anos"]["2025"]["meses"]]
+        for tot,meses in (("T",m26),("TT",m26+m25)):
+            arv={}; txa={}
+            for m in meses:
+                Am=ent["dre"].get(m) or {}
+                soma_em(arv,Am)
+                Xm=(ent.get("tx") or {}).get(m) or {}
+                for cat in cats_do_mes(Am):
+                    if cat in Xm: txa.setdefault(cat,[]).extend(Xm[cat])
+            ordena(arv)
+            ent["dre"][tot]=arv; ent["tx"][tot]=txa
             ent["dre_result"][tot]=R2(sum(x["v"] for t,gs in ent["dre"][tot].items() for g,cos in gs.items() for co,l in cos.items() for x in l))
             rt,ct=kpis(ent["dre"][tot],(D["com"].get("T") or {}).get("oc") if e!="amana" else None,
                                         (D["com"].get("T") or {}).get("tkt") if e!="amana" else None)
