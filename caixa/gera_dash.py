@@ -32,6 +32,7 @@ for e,x in ents.items():
     x["saldo_hoje"]=R2(sum(c["hoje"] for c in x["contas"]))
     x["ancora_total"]=R2(sum(c["ini"] for c in x["contas"]))
     x["naoconc"]=sum(c["naoconc"] for c in x["contas"])
+    x["previsto"]=sum(c.get("previsto") or 0 for c in x["contas"])
 
 BLOB=json.dumps({"meta":{k:D[k] for k in ("hoje","fim","ancora","gerado")},
                  "deparar":D.get("deparar"),

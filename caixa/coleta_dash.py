@@ -65,12 +65,15 @@ def coleta(HOJE):
             r=call(emp,"financas/extrato","ListarExtrato",
                    {"nCodCC":cod,"dPeriodoInicial":(ANCORA_DATA+datetime.timedelta(days=1)).strftime("%d/%m/%Y"),
                     "dPeriodoFinal":HOJE.strftime("%d/%m/%Y")})
-            mv=sum(x.get("nValorDocumento") or 0 for x in (r.get("listaMovimentos") or [])
-                   if not (x.get("cDesCliente") or "").startswith("SALDO") and (x.get("cSituacao") or "")=="Conciliado")
-            nc=sum(1 for x in (r.get("listaMovimentos") or [])
-                   if not (x.get("cDesCliente") or "").startswith("SALDO") and (x.get("cSituacao") or "")!="Conciliado")
+            L=[x for x in (r.get("listaMovimentos") or []) if not (x.get("cDesCliente") or "").startswith("SALDO")]
+            sit=lambda x:(x.get("cSituacao") or "")
+            mv=sum(x.get("nValorDocumento") or 0 for x in L if sit(x)=="Conciliado")
+            # "Previsto" e projecao de titulo futuro dentro da conta, nao movimento
+            # pendente de conciliacao: contar os dois juntos inflava o alerta.
+            nc=sum(1 for x in L if sit(x)=="Não conciliado")
+            pv=sum(1 for x in L if sit(x)=="Previsto")
             a=cfg["ancora"].get(nome,0.0)
-            contas.append({"n":nome,"ini":R2(a),"mov":R2(mv),"hoje":R2(a+mv),"naoconc":nc})
+            contas.append({"n":nome,"ini":R2(a),"mov":R2(mv),"hoje":R2(a+mv),"naoconc":nc,"previsto":pv})
         itens=[];atr=[];desfecho={}
         for lado,ep,cn,raiz in (("receber","financas/contareceber","ListarContasReceber","conta_receber_cadastro"),
                                 ("pagar","financas/contapagar","ListarContasPagar","conta_pagar_cadastro")):
