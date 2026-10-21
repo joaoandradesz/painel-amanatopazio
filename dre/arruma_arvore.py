@@ -17,13 +17,17 @@ import json,os,collections
 R2=lambda v: round((v or 0)+0.0,2)
 f=lambda v: format(R2(v),",.2f")
 PAINEL=os.path.expanduser("~/painel-amanatopazio/")
-MOVE=[("topazio","Aluguel de veículos",("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação"),
+MOVE=[] if __import__("os").environ.get("SO_RENOMEIA") else [("topazio","Aluguel de veículos",("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação"),
                                        ("1. Lucro Bruto","21. Custos","01. Arrendamento"),
                                        "2.1 Pessoal indireto da operação","2.1 Arrendamento"),
       ("consol","Aluguel de veículos",("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação"),
                                       ("1. Lucro Bruto","21. Custos","01. Arrendamento"),
                                       "2.1 Pessoal indireto da operação","2.1 Arrendamento")]
-RENOMEIA=[("amana","Agencia de MKT","Marketing"),("consol","Agencia de MKT","Marketing")]
+RENOMEIA=[("amana","Agencia de MKT","Marketing"),("consol","Agencia de MKT","Marketing"),
+ # 21/10: a "Taxa de Permanencia" da Amana e o mesmo ISS de permanencia da ilha que a
+ # Topazio chama de "ISS | Permanencia" -- mesmas observacoes, mesmo orgao, e ja estava
+ # no mesmo no da arvore. Mesmo nome nas duas => uma linha so no consolidado.
+ ("amana","Taxa de Permanência","ISS | Permanência"),("consol","Taxa de Permanência","ISS | Permanência")]
 def carrega(p):
     s=open(p,encoding="utf-8").read(); i=s.index("const D=");j=s.index("{",i);dep=0
     for k in range(j,len(s)):
