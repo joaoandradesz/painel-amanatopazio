@@ -12,8 +12,10 @@ def carrega(arq):
             dep-=1
             if dep==0: return json.loads(s[j:k+1])
 D=carrega(sys.argv[1] if len(sys.argv)>1 else "/Users/joaoandrade/painel-amanatopazio/index.html")
-E=("amana","topazio","consol"); M26=[str(x) for x in range(1,9)]; M25=["2508","2509","2510","2511","2512"]
-MD=[str(x) for x in range(1,10)]
+E=("amana","topazio","consol")
+# os meses vem do proprio painel: mes novo publicado entra na trava sem editar isto
+M26=[str(x) for x in D["anos"]["2026"]["meses"]]; M25=[str(x) for x in D["anos"]["2025"]["meses"]]
+MD=[str(x) for x in D["months"]]
 pr=lambda *a: print("   ",*a)
 SEM_CLIQUE=set(["Intercompany não casado","Juros Pagos*","Multas Pagas*","Descontos Obtidos*"])
 
