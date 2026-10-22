@@ -26,6 +26,7 @@ def nz(s):
 # de-para das categorias que o mes trouxe e a arvore de jan-ago nao tinha
 MAN={
  "amana":{
+  "Manutenção predial - materiais":(None,("1. Lucro Bruto","21. Custos","13. Manutenção")),
   "Pontuação - Equipe e Diretoria":("Pontuação e Premiação",("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
   "Adiantamentos":(None,("2. Despesas","11. Fixas","01. Despesas com Pessoal")),
   "ISS":(None,("1. Lucro Bruto","01. Receita Líquida Operacional","03. Deduções de Receita")),
