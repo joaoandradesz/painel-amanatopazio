@@ -16,7 +16,7 @@ from consolida import consolida,carrega
 
 MES=os.environ.get("MES","9"); ANO="2026"
 PAINEL=os.path.expanduser("~/painel-amanatopazio/")
-BASE=os.path.join(os.path.dirname(os.path.abspath(__file__)),"set.json")
+BASE=os.path.join(os.path.dirname(os.path.abspath(__file__)),os.environ.get("BASE","set.json"))
 R2=lambda v: round((v or 0)+0.0,2)
 f=lambda v: format(R2(v),",.2f").replace(",","@").replace(".",",").replace("@",".")
 def nz(s):
