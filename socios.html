@@ -702,7 +702,7 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 <nav class="nav"><div class="wrap">
   <img id="navlogo" alt="Exact BR">
   <div class="nav-links">
-    <a href="#geral" class="on">Visão geral</a><a href="#orcado">Orçado × Real</a><a href="#pizza">Saídas</a><a href="#ponte">DRE × Caixa</a><a href="#comercial">Comercial</a><a href="#relatorios">Relatórios</a>
+    <a href="#geral" class="on">Visão geral</a><a href="#pizza">Saídas</a><a href="#comercial">Comercial</a><a href="#relatorios">Relatórios</a>
   </div>
   
 </div></nav>
@@ -732,11 +732,7 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
   <svg id="trend" viewBox="0 0 1080 320" style="display:none"></svg><span id="trendT" style="display:none"></span>
 </div></section>
 
-<section id="orcado"><div class="wrap">
-  <div class="sec-head"><div class="k">Orçamento 2026</div><h2>Orçado <span class="light">× realizado</span></h2>
-    <p class="lede">Orçamento da pousada confrontado com o que de fato aconteceu, linha a linha, no nosso plano de contas.</p></div>
-  <div id="orcBody"></div>
-</div></section>
+<!-- secao "Orçado × realizado" retirada da aba Socios a pedido do controller -->
 
 <!-- secao "De onde veio e para onde foi" retirada a pedido do controller -->
 
@@ -751,12 +747,7 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
   </div>
 </div></section>
 
-<section id="ponte" class="sec-alt"><div class="wrap">
-  <div class="bridge"><div class="bk" id="brK">A leitura do mês</div>
-    <h3 id="brTitle"></h3><p class="bsub" id="brSub"></p>
-    <div class="bflow" id="bflow"></div>
-  </div>
-</div></section>
+<!-- secao "A leitura do mês — DRE × Caixa" retirada da aba Socios a pedido do controller -->
 
 <section id="comercial" class="sec-alt"><div class="wrap">
 <h2>Desempenho comercial <span class="sub">Ocupação, ticket e RevPar — Pousada Topázio</span></h2>
@@ -1088,6 +1079,7 @@ function drawFlow(el,tree,total,dir){
   el.innerHTML=html;
 }
 function renderBridge(){
+  if(!document.getElementById("brK")) return;   /* secao DRE x Caixa retirada da aba Socios */
   const dfc=dfcM();const caixa=dfc.resultado;const dre=E().dre_result[MES]||0;
   if(!temDre(MES)){
     document.getElementById('brK').textContent=`A leitura de ${periodMes()}`;
