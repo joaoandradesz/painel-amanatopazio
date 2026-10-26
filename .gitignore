@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+
+# Puxadas cruas do Omie com nome de hospede. O repositorio e publico:
+# estes arquivos se refazem em um comando e nao entram.
+dre/rec_amana_atual.json
+dre/pag_amana_atual.json
+dre/conf_11_agosto.json
