@@ -33,8 +33,11 @@ MAN={
   "Alimentação de Colaboradores Operacional":(None,("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação")),
  },
  "topazio":{
-  # decisao C do João: premiacao da equipe de operacao acompanha o salario, em custo direto
-  "Premiação - equipe":(None,("1. Lucro Bruto","21. Custos","04. Pessoal direto")),
+  # padrao definido pelo Tiago em 26/10/2026: premiacao num lugar so, inclusive o
+  # historico, dentro de "Pontuacao e Premiacao" em despesa comercial. Substitui a
+  # decisao C de 15/10, que a punha em custo direto. Nao mexe em EBITDA (as duas
+  # posicoes ficam acima dele) e preserva agosto, que ja estava publicado aqui.
+  "Premiação - equipe":("Pontuação e Premiação",("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
   "Gestor operacional PJ":(None,("1. Lucro Bruto","21. Custos","06. Prestação de serviços operacionais")),
   "Insumos itens para revenda":("Insumos para revenda",("1. Lucro Bruto","21. Custos","11. Insumos para revenda")),
   "Retenção de impostos federais":(None,("2. Despesas","11. Fixas","05. Outros Tributos")),
@@ -233,7 +236,7 @@ def main():
     if int(MES) not in D["anos"][ANO]["meses"]: D["anos"][ANO]["meses"]=sorted(D["anos"][ANO]["meses"]+[int(MES)])
     D["fonte"]=("DFC pelo extrato do Omie (jan/26 a 30/09/26 e ago–dez/25) · DRE pelos relatórios oficiais do Omie "
                 "(jan a jul/26), pela base de títulos do Omie (ago e set/26) e pela base caixa em 2025")
-    D["gerado_em"]="20/10/2026"
+    D["gerado_em"]="27/10/2026"
     if os.environ.get("GRAVA"):
         blob=json.dumps(D,ensure_ascii=False)
         for arq in ("index.html","socios.html"):
