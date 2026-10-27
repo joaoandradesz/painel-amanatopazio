@@ -26,7 +26,11 @@ from api import call as _call
 
 MES=os.environ.get("MES","09/2026")
 EMPS=[os.environ["EMP"]] if os.environ.get("EMP") else ["amana","topazio"]
-CX_CAIXA={"Caixinha","Caixinha - Financeiro"}          # CX que e dinheiro mesmo
+# Caixinha FORA do perimetro, por decisao do Joao (27/10/2026): nao ha quem
+# preencha e controle o fundo fixo, entao tratar como caixa geraria confusao.
+# Com ela fora, a transferencia para a caixinha vira saida de caixa -- que e
+# como o painel ja mostrava. Para incluir, basta listar o nome aqui.
+CX_CAIXA=set()
 # o extrato mistura movimento REALIZADO com PREVISTO. Previsto nao e caixa:
 # na GetNet da Amana sao 30 lancamentos e R$ 277 mil que nunca entraram no mes.
 REALIZADO={"Conta Paga","Conta Recebida","Débito de Transferência","Crédito de Transferência",
