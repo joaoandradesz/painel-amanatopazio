@@ -47,26 +47,45 @@ def tab(cols,head,rows,cls="dtab xs",num=None):
 def cat(ent,mes,chave):
     return round(sum(x["v"] for x in L["%s_%s"%(ent,mes)] if chave in x["c"] or chave in x["cat"]),2)
 IC=abs(cat("amana","9","02. Custo dos Serviços Prestados"))
+# Relatorio comercial diario da Pousada Topazio, posicao de 26/10/2026. Os numeros de
+# agosto e setembro desse relatorio batem item por item com o D.com do painel -- estes
+# aqui sao os meses que o painel ainda nao fecha.
+FRENTE=[("outubro/26",85.59,82.80,686080.29),("novembro/26",69.11,77.11,510749.07),
+        ("dezembro/26",35.27,77.20,265104.09)]
+CARTEIRA_CARTAO=586280.21; CARTEIRA_COBRAR=449828.12
+OUT_OC=85.59; OUT_TKT=1823.26; OUT_REC=649940.98; OUT_CANC=43.97
+CAIXA_2610=645769.35
 CAIXA_SI=round(sum(x["si"] for x in d["contas"]["consol"]),2)
 CAIXA_SF=round(sum(x["sf"] for x in d["contas"]["consol"]),2)
+def be(m):
+    x=d["resumo"]["consol"][m]; rb=x["rb"]; mc=rb+x["cvar"]
+    pe=-x["cfix"]/(mc/rb)
+    return dict(rb=rb,cvar=x["cvar"],mc=mc,mcp=mc/rb,cfix=x["cfix"],eb=x["ebitda"],
+                pe=pe,oce=com[m]["oc"]*pe/rb,seg=(rb-pe)/rb*100)
+B8,B9=be("8"),be("9")
+pp=lambda v: ("%.1f%%"%v).replace(".",",")
 H=[]
 # ---- 1 capa
 H.append(sec("Setembro/2026",
  '<span class="eyebrow">Relatório de fechamento</span>'
- '<h2 class="editorial xl" style="margin-top:18px;max-width:1100px;">Setembro de 2026,<br>'
- '<span style="color:var(--orange);">fechado.</span></h2>'
- '<p class="lede" style="max-width:900px;font-size:19px;margin-top:18px;">Grupo Amana + Pousada Topázio. '
- 'Receita, resultado e caixa saem da mesma foto: a DRE bate ao centavo com o relatório de faturamento da '
- 'contabilidade e o caixa foi conferido conta a conta contra os extratos.</p>'
+ '<h2 class="editorial xl" style="margin-top:18px;max-width:1100px;">O resultado caiu.<br>'
+ '<span style="color:var(--orange);">A estrutura fixa, não.</span></h2>'
+ '<p class="lede" style="max-width:920px;font-size:19px;margin-top:18px;">Grupo Amana + Pousada Topázio, '
+ 'setembro de 2026. A receita recuou %s contra agosto e o custo fixo ficou praticamente igual — é isso que '
+ 'explica o EBITDA cair de %s para %s da receita.</p>'
  '<div class="rule" style="margin:28px 0 24px 0;"></div>'
- '<p class="body-text" style="font-size:15px;max-width:920px;">O número caiu em relação a agosto — e dá para '
- 'confiar nele. <strong>EBITDA consolidado de R$ %s</strong>, %s da receita bruta, depois de lançada a energia '
- 'de setembro e reclassificado o frete item a item.</p>'
+ '<p class="body-text" style="font-size:15px;max-width:940px;">A operação continua acima do ponto de '
+ 'equilíbrio, mas com um terço menos de folga: a margem de segurança foi de %s em agosto para '
+ '<strong>%s</strong> em setembro. E o mês que precisa de atenção comercial agora é <strong>dezembro</strong>, '
+ 'que está com %s de ocupação contratada contra %s no mesmo mês do ano passado.</p>'
  '<div class="proof-row"><div><div class="pv orange">%s</div><div class="pl">Receita bruta do mês</div></div>'
  '<div><div class="pv">%s</div><div class="pl">EBITDA · %s da receita</div></div>'
  '<div><div class="pv">%s</div><div class="pl">Resultado depois de capex</div></div>'
- '<div><div class="pv">%s</div><div class="pl">Caixa em 30/09, conferido com o banco</div></div></div>'%(
-   f(S["consol_9"]["eb"]),pc(S["consol_9"]["eb"],S["consol_9"]["rb"]),
+ '<div><div class="pv">%s</div><div class="pl">Caixa em 30/09</div></div></div>'%(
+   ("%.1f%%"%((S["consol_8"]["rb"]-S["consol_9"]["rb"])/S["consol_8"]["rb"]*100)).replace(".",","),
+   pc(S["consol_8"]["eb"],S["consol_8"]["rb"]),pc(S["consol_9"]["eb"],S["consol_9"]["rb"]),
+   pp(B8["seg"]),pp(B9["seg"]),
+   ("%.2f%%"%FRENTE[2][1]).replace(".",","),("%.2f%%"%FRENTE[2][2]).replace(".",","),
    f(S["consol_9"]["rb"]),f(S["consol_9"]["eb"]),pc(S["consol_9"]["eb"],S["consol_9"]["rb"]),
    f(S["consol_9"]["res"]),f(CAIXA_SF)),
  dark=True))
@@ -82,12 +101,16 @@ H.append(sec("Os números de setembro/2026",
    kc("Resultado do mês",f(c9["res"]),"depois de investimento e não operacional"),
    kc("Ocupação",pct(com["9"]["oc"]),"%d hóspedes em %d noites"%(com["9"]["hosp"],com["9"]["noites"])),
    kc("Diária média",f(com["9"]["tkt"]),"RevPAR de R$ %s"%f(com["9"]["revpar"])),
-   kc("Caixa em 30/09",f(CAIXA_SF),"conferido conta a conta com os extratos"))+
- '<p class="body-text" style="font-size:14px;margin-top:22px;max-width:1000px;">Contra agosto, a receita cai '
- '<strong>R$ %s</strong> e o EBITDA, <strong>R$ %s</strong>. A ocupação saiu de %s para %s. Setembro é o primeiro '
- 'mês em que a receita de hospedagem bate <strong>ao centavo</strong> com o relatório de faturamento da '
- 'contabilidade: R$ 595.018,22. No ano, o EBITDA acumulado chega a <strong>R$ %s</strong>.</p>'%(
-   f(c8["rb"]-c9["rb"]),f(c8["eb"]-c9["eb"]),pct(com["8"]["oc"]),pct(com["9"]["oc"]),f(S["consol_T"]["eb"])),
+   kc("Caixa em 30/09",f(CAIXA_SF),"depois de consumir R$ %s no mês"%f(abs(CAIXA_SF-CAIXA_SI))))+
+ '<p class="body-text" style="font-size:14px;margin-top:22px;max-width:1010px;">Contra agosto, a receita cai '
+ '<strong>R$ %s</strong> e o EBITDA, <strong>R$ %s</strong> — o EBITDA cai mais rápido que a receita porque a '
+ 'estrutura fixa não acompanha a baixa temporada. A ocupação saiu de %s para %s e a diária média, de '
+ 'R$ %s para R$ %s: <strong>a maior parte da queda é preço, não volume</strong>.</p>'
+ '<p class="body-text" style="font-size:14px;margin-top:10px;max-width:1010px;">No ano, o EBITDA acumulado '
+ 'chega a <strong>R$ %s</strong>, com resultado após investimentos de <strong>R$ %s</strong> — o grupo converteu '
+ 'resultado operacional em ativo, não em caixa.</p>'%(
+   f(c8["rb"]-c9["rb"]),f(c8["eb"]-c9["eb"]),pct(com["8"]["oc"]),pct(com["9"]["oc"]),
+   f(com["8"]["tkt"]),f(com["9"]["tkt"]),f(S["consol_T"]["eb"]),f(S["consol_T"]["res"])),
  cap=_c))
 # ---- 3 DRE consolidada
 c=c9; rb=c["rb"]
@@ -152,27 +175,10 @@ H.append(sec("Amana e Topázio · setembro/2026",
 #  'contabilidade. A energia e o frete de obra, que antes faltavam, estão dentro — e é parte do motivo de o '
 #  'EBITDA fechar em R$ %s.</p>'%f(c9["eb"]),cap=_c))
 
-# ---- 6 receita x faturamento
-fat={"1":529990.86,"2":270043.26,"3":88285.52,"4":57473.27,"5":272765.44,"6":297456.07,"7":551271.84,"8":750504.80,"9":595018.22}
-HOSP=d["hospedagem"]
-nm={"1":"janeiro","2":"fevereiro","3":"março","4":"abril","5":"maio","6":"junho","7":"julho","8":"agosto","9":"setembro"}
-rows=[{"cls":"hi" if m in ("8","9") else "","c":[nm[m],f(fat[m]),f(HOSP[m]),f(HOSP[m]-fat[m])]} for m in nm]
-_m,_c=cab()
-H.append(sec("Receita × faturamento da contabilidade",
- _m+'<h2 class="editorial" style="font-size:30px;">A receita, <span class="light">conferida contra</span> <span class="orange">a contabilidade.</span></h2>'
- '<p class="lede" style="margin-top:8px;font-size:14px;">Receita de hospedagem da Amana no painel contra o relatório de NFS-e emitido pela contabilidade, mês a mês.</p>'
- +tab(["24%","","",""],["Mês","NFS-e · contabilidade","Painel","Diferença"],rows)+
- '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1020px;">'
- '<strong>Os nove meses fecham.</strong> Agosto era o único que não fechava, e fechou nesta revisão: a '
- '<strong>NFS-e 129</strong> (Matheus Rocca, R$ 17.155,91) estava lançada com a data da venda no cartão '
- '(10/07) em vez da data da nota, e os <strong>R$ 1.525,67</strong> de hospedagem recebida <strong>sem '
- 'NFS-e</strong> (reserva 2082, PIX de 31/08) passaram a ter linha própria, fora da receita de hospedagem. '
- 'Os 4 centavos que sobram são arredondamento da contabilidade nas mesmas 74 notas.</p>'
- '<p class="body-text" style="font-size:13.5px;margin-top:10px;max-width:1020px;">Conferência nota a nota: '
- '<strong>as 74 notas de agosto e as 68 de setembro estão todas lançadas</strong>, nenhuma cancelada. '
- 'Agosto passa a valer <strong>retificado</strong>: receita de R$ %s, EBITDA de R$ %s e resultado de '
- 'R$ %s — eram 760.600,59 / 165.553,19 / 138.376,99 no relatório entregue em 07/10.</p>'%(
-   f(c8["rb"]),f(c8["eb"]),f(c8["res"])),cap=_c))
+# ---- a conferencia da receita contra a relacao de faturamento da contabilidade saiu
+# em 27/10/2026: e processo de fechamento, nao analise financeira. Fica no painel e na
+# planilha "Conferencia Faturamento Contabilidade x Painel".
+
 # ---- 7 setembro x agosto
 rows=[{"c":[k,f(c8[x]),f(c9[x]),f(c9[x]-c8[x])]} for k,x in
   [("Receita bruta","rb"),("Deduções","ded"),("Custos dos serviços","cus"),("Pessoal da operação","pdir"),
@@ -181,14 +187,57 @@ rows.append({"cls":"hi","c":["EBITDA",f(c8["eb"]),f(c9["eb"]),f(c9["eb"]-c8["eb"
 rows.append({"c":["Investimentos",f(c8["inv"]),f(c9["inv"]),f(c9["inv"]-c8["inv"])]})
 rows.append({"cls":"hi2","c":["RESULTADO DO MÊS",f(c8["res"]),f(c9["res"]),f(c9["res"]-c8["res"])]})
 qrec=("%.1f%%"%(abs(c9["rb"]-c8["rb"])/c8["rb"]*100)).replace(".",",")
+# decomposicao preco x volume sobre a receita do sistema comercial, que e onde noite
+# ocupada e diaria media sao medidas na mesma base
+v0,v1=com["8"]["noites"],com["9"]["noites"]; p0,p1=com["8"]["tkt"],com["9"]["tkt"]
+ef_vol=round((v1-v0)*p0,2); ef_pre=round(v0*(p1-p0),2); ef_cru=round((v1-v0)*(p1-p0),2)
+ef_tot=ef_vol+ef_pre+ef_cru
+pv=[{"c":["Noites ocupadas","%d"%v0,"%d"%v1,"%d"%(v1-v0)]},
+    {"c":["Diária média",f(p0),f(p1),f(p1-p0)]},
+    {"cls":"sub","c":["Receita do sistema comercial",f(com["8"]["rec"]),f(com["9"]["rec"]),f(com["9"]["rec"]-com["8"]["rec"])]},
+    {"c":["&nbsp;&nbsp;efeito volume · 17 noites a menos","","",f(ef_vol)]},
+    {"c":["&nbsp;&nbsp;efeito preço · R$ %s a menos na diária"%f(abs(p1-p0)),"","",f(ef_pre)]},
+    {"c":["&nbsp;&nbsp;efeito cruzado","","",f(ef_cru)]}]
 _m,_c=cab()
 H.append(sec("Setembro contra agosto",
  _m+'<h2 class="editorial" style="font-size:30px;">De agosto <span class="light">para</span> <span class="orange">setembro.</span></h2>'
  '<p class="lede" style="margin-top:8px;font-size:14px;">Consolidado, nas duas fotos já fechadas.</p>'
  +tab(["32%","","",""],["Linha","Agosto","Setembro","Variação"],rows)+
- '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1020px;">A receita cai %s com a baixa '
- 'temporada e o custo não acompanha na mesma proporção. É o que explica o EBITDA sair de %s para %s da receita. '
- 'O resultado do mês cai R$ %s.</p>'%(qrec,pc(c8["eb"],c8["rb"]),pc(c9["eb"],c9["rb"]),f(abs(c9["res"]-c8["res"]))),
+ '<h3 style="margin-top:20px;">De onde vem a queda de receita</h3>'
+ +tab(["38%","","",""],["","Agosto","Setembro","Efeito"],pv)+
+ '<p class="body-text" style="font-size:13.5px;margin-top:14px;max-width:1020px;">A receita cai %s e o custo '
+ 'não acompanha: é por isso que o EBITDA sai de %s para %s da receita e o resultado do mês recua R$ %s. '
+ '<strong>Três quartos da queda vêm da diária média</strong>, não do volume — a pousada perdeu 17 noites '
+ 'ocupadas, mas perdeu R$ %s por diária. Preço de baixa temporada é esperado; o que não é esperado é a '
+ 'estrutura fixa não respirar junto.</p>'%(
+   qrec,pc(c8["eb"],c8["rb"]),pc(c9["eb"],c9["rb"]),f(abs(c9["res"]-c8["res"])),f(abs(p1-p0))),
+ cap=_c))
+
+# ---- estrutura de custos e ponto de equilibrio
+rows=[{"cls":"sub","c":["Receita bruta",f(B8["rb"]),f(B9["rb"])]},
+ {"c":["(–) Custos e despesas variáveis",f(B8["cvar"]),f(B9["cvar"])]},
+ {"cls":"hi","c":["= MARGEM DE CONTRIBUIÇÃO",f(B8["mc"]),f(B9["mc"])]},
+ {"c":["&nbsp;&nbsp;sobre a receita bruta",pp(B8["mcp"]*100),pp(B9["mcp"]*100)]},
+ {"c":["(–) Custos e despesas fixas",f(B8["cfix"]),f(B9["cfix"])]},
+ {"cls":"sub","c":["= EBITDA",f(B8["eb"]),f(B9["eb"])]},
+ {"cls":"grp","c":['<span>O QUE A ESTRUTURA EXIGE PARA O MÊS FECHAR NO ZERO</span>',"",""]},
+ {"c":["Receita de equilíbrio",f(B8["pe"]),f(B9["pe"])]},
+ {"c":["Ocupação de equilíbrio",pp(B8["oce"]),pp(B9["oce"])]},
+ {"cls":"hi2","c":["MARGEM DE SEGURANÇA",pp(B8["seg"]),pp(B9["seg"])]}]
+_m,_c=cab()
+H.append(sec("Estrutura de custos e ponto de equilíbrio",
+ _m+'<h2 class="editorial" style="font-size:30px;">Quanto a operação <span class="light">precisa faturar</span> <span class="orange">para não perder dinheiro.</span></h2>'
+ '<p class="lede" style="margin-top:8px;font-size:14px;">Consolidado Amana + Topázio. Variável é o que anda com a ocupação; fixo é o que a pousada paga com a casa cheia ou vazia.</p>'
+ +tab(["46%","",""],["","Agosto","Setembro"],rows)+
+ '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1030px;">A receita caiu R$ %s e o '
+ 'custo fixo subiu R$ %s. É a definição de alavancagem operacional funcionando contra: cada real de receita '
+ 'que sai leva %s centavos de EBITDA junto. A margem de contribuição até melhorou %s p.p. — o custo variável '
+ 'caiu mais que a receita —, mas não compensa uma estrutura fixa que não se mexe.</p>'
+ '<p class="body-text" style="font-size:13.5px;margin-top:10px;max-width:1030px;">O número para guardar é a '
+ '<strong>ocupação de equilíbrio: %s</strong>. Abaixo disso, com a diária média de setembro, o mês dá prejuízo '
+ 'operacional. A margem de segurança encolheu de %s para %s em um único mês.</p>'%(
+   f(abs(B9["rb"]-B8["rb"])),f(abs(B9["cfix"]-B8["cfix"])),("%.0f"%(B9["mcp"]*100)),
+   ("%.1f"%((B9["mcp"]-B8["mcp"])*100)).replace(".",","),pp(B9["oce"]),pp(B8["seg"]),pp(B9["seg"])),
  cap=_c))
 # ---- 8 orcado x realizado
 rows=[{"c":[x["l"],f(x["o"]),f(x["r"]),f(x["d"])]} for x in orc["linhas"][:9]]
@@ -210,17 +259,78 @@ for x in d["contas"]["consol"]:
     if x["t"]=="CC" or abs(x["si"])>0.004 or abs(x["sf"])>0.004:
         cc.append({"c":[nome(x["n"]),f(x["si"]),f(x["sf"]-x["si"]),f(x["sf"])]})
 ti,tf=CAIXA_SI,CAIXA_SF
+APL=round(sum(x["sf"] for x in d["contas"]["consol"] if x["t"]=="CA"),2)
 cc.append({"cls":"hi2","c":["TOTAL CONSOLIDADO",f(ti),f(tf-ti),f(tf)]})
+# ponte do resultado ao caixa, e a posicao por conta
+dfc=d["dfc_consol"]
+cx_ent=round(sum(v["total"] for v in dfc["receitas"].values()),2)
+cx_rec=round(dfc["receitas"].get("1.1 Receita bruta de vendas",{}).get("total",0),2)
+cx_inv=round(sum(v["total"] for g,v in dfc["despesas"].items() if "Investimento" in g),2)
+giro=round((tf-ti)-c9["res"],2)
+ponte=[{"cls":"sub","c":["EBITDA de setembro",f(c9["eb"])]},
+ {"c":["(±) Resultado financeiro e não operacional",f(c9["rf"]+c9["recnop"]+c9["nop"])]},
+ {"c":["(–) Investimentos",f(c9["inv"])]},
+ {"cls":"sub","c":["= Resultado do mês, por competência",f(c9["res"])]},
+ {"c":["(±) Capital de giro · o que foi faturado e não entrou, e o que foi pago de meses anteriores",f(giro)]},
+ {"cls":"hi2","c":["= VARIAÇÃO DE CAIXA NO MÊS",f(tf-ti)]}]
+_m,_c=cab()
+H.append(sec("Do resultado ao caixa",
+ _m+'<h2 class="editorial" style="font-size:30px;">O mês deu lucro <span class="light">e</span> <span class="orange">consumiu caixa.</span></h2>'
+ '<p class="lede" style="margin-top:8px;font-size:14px;">Consolidado Amana + Topázio. A distância entre as duas pontas é capital de giro, e ela tem explicação.</p>'
+ +tab(["62%",""],["","Setembro"],ponte)+
+ '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1030px;">Setembro faturou R$ %s e '
+ 'recebeu <strong>R$ %s</strong> — R$ %s de diferença, que é o prazo do cartão e o parcelamento. Do outro '
+ 'lado, a despesa comercial pagou R$ %s contra R$ %s de competência: comissão de reserva de meses anteriores '
+ 'saindo agora. <strong>Não é prejuízo; é descasamento de prazo</strong>, e ele se inverte quando a alta '
+ 'temporada começar a receber.</p>'
+ '<p class="body-text" style="font-size:13.5px;margin-top:10px;max-width:1030px;">O investimento do mês foi de '
+ 'R$ %s em competência e R$ %s em caixa. No ano, o grupo gerou R$ %s de EBITDA e fechou com resultado após '
+ 'investimentos de R$ %s: <strong>o capex é o que consome o resultado</strong>, não a operação.</p>'%(
+   f(c9["rb"]),f(cx_rec),f(abs(cx_rec-c9["rb"])),f(abs(139653.57)),f(abs(c9["com"])),
+   f(abs(c9["inv"])),f(abs(cx_inv)),f(S["consol_T"]["eb"]),f(S["consol_T"]["res"])),
+ cap=_c))
+
 _m,_c=cab()
 H.append(sec("Caixa · posição por conta",
- _m+'<h2 class="editorial" style="font-size:30px;">O caixa, <span class="light">conta a conta,</span> <span class="orange">contra o banco.</span></h2>'
- '<p class="lede" style="margin-top:8px;font-size:14px;">Saldo em 31/08 e em 30/09, conferido conta a conta com os extratos bancários e os relatórios das adquirentes.</p>'
+ _m+'<h2 class="editorial" style="font-size:30px;">Onde o dinheiro <span class="orange">está parado.</span></h2>'
+ '<p class="lede" style="margin-top:8px;font-size:14px;">Saldo em 31/08 e em 30/09, conta a conta.</p>'
  +tab(["38%","","",""],["Conta","Em 31/08","Movimento de setembro","Em 30/09"],cc)+
- '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1020px;">O caixa consolidado cai '
- '<strong>R$ %s</strong> no mês e fecha em R$ %s. A conta corrente do Santander fica zerada porque o banco '
- 'varre o saldo para a aplicação automaticamente — as duas se leem juntas, e somadas dão R$ %s, o mesmo do '
- 'extrato. O CDB DI PJ caiu R$ 210 mil, que financiaram o mês: é resgate, não resultado.</p>'%(
-   f(abs(tf-ti)),f(tf),f(236178.41)),cap=_c))
+ '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1030px;">R$ %s dos R$ %s estão em '
+ 'aplicação — <strong>%s do caixa do grupo rende e está disponível</strong>. A conta corrente do Santander '
+ 'fica zerada porque o banco varre o saldo para a aplicação automaticamente; as duas se leem juntas. O CDB DI '
+ 'PJ caiu R$ 210 mil no mês: é resgate para financiar a operação e o capex, não resultado.</p>'
+ '<p class="body-text" style="font-size:13.5px;margin-top:10px;max-width:1030px;">No ritmo de consumo de '
+ 'setembro (R$ %s por mês), o caixa atual cobre <strong>%s meses</strong>. Mas setembro é o vale do ano: '
+ 'outubro e novembro são meses de alta, e a carteira a receber da pousada é de R$ %s.</p>'%(
+   f(APL),f(tf),("%.0f%%"%(APL/tf*100)),f(abs(tf-ti)),("%.1f"%(tf/abs(tf-ti))).replace(".",","),
+   f(CARTEIRA_CARTAO+CARTEIRA_COBRAR)),
+ cap=_c))
+
+# ---- o que vem pela frente
+lin=[]
+for nome_m,oc26,oc25,prev in FRENTE:
+    lin.append({"cls":"hi2" if prev<B9["pe"] else "","c":[
+        nome_m.upper() if prev<B9["pe"] else nome_m,
+        ("%.2f%%"%oc26).replace(".",","),("%.2f%%"%oc25).replace(".",","),
+        f(prev),f(prev-B9["pe"])]})
+_m,_c=cab()
+H.append(sec("O que vem pela frente",
+ _m+'<h2 class="editorial" style="font-size:30px;">Outubro vai bem. <span class="orange">Dezembro precisa de atenção.</span></h2>'
+ '<p class="lede" style="margin-top:8px;font-size:14px;">Ocupação já contratada e previsão de faturamento da pousada, posição de 26/10, contra a receita de equilíbrio de setembro (R$ %s).</p>'%f(B9["pe"])
+ +tab(["24%","","","",""],["Mês","Ocupação contratada","Mesmo mês de 2025","Previsão de faturamento","Contra o equilíbrio"],lin)+
+ '<p class="body-text" style="font-size:13.5px;margin-top:16px;max-width:1030px;">Outubro fecha acima de '
+ 'outubro do ano passado, com %s de ocupação e diária média de R$ %s. Novembro vem 8 pontos abaixo de '
+ 'novembro/25 e ainda passa com folga. <strong>Dezembro é o problema</strong>: 35,27%% contratados contra '
+ '77,20%% no ano passado. Faltam dois meses para vender, mas é o único mês do horizonte que hoje fica '
+ '<strong>abaixo do ponto de equilíbrio</strong> — e dezembro é mês de alta temporada, não de vale.</p>'
+ '<p class="body-text" style="font-size:13.5px;margin-top:10px;max-width:1030px;">Duas coisas sustentam o '
+ 'caixa enquanto isso: R$ %s já contratados a receber (R$ %s em cartão e R$ %s a cobrar) e o saldo de '
+ 'R$ %s em 26/10. A taxa de cancelamento de outubro, de %s, é o que mais atrapalha a previsibilidade — '
+ 'e merece uma política própria.</p>'%(
+   ("%.2f%%"%OUT_OC).replace(".",","),f(OUT_TKT),f(CARTEIRA_CARTAO+CARTEIRA_COBRAR),
+   f(CARTEIRA_CARTAO),f(CARTEIRA_COBRAR),f(CAIXA_2610),("%.2f%%"%OUT_CANC).replace(".",",")),
+ cap=_c))
+
 html=cabeca+'<body><div class="deck" id="deck">'+"".join(H)+rodape
 html=html.replace("Relatório Gerencial · Agosto/2026 · Grupo Amana / Pousada Topázio · Exact BR",
                   "Relatório de Fechamento · Setembro/2026 · Grupo Amana / Pousada Topázio · Exact BR")
