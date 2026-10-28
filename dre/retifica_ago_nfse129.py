@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Retificacao de agosto/2026 (rev. 4): a NFS-e 129 e a hospedagem sem nota.
+"""Retificacao de agosto/2026: a NFS-e 129 e a hospedagem sem nota.
+
+   *** NAO RODAR ANTES DO FECHAMENTO DE DEZEMBRO/2026. ***
+   Decisao do Joao em 27/10/2026: agosto ja foi entregue duas vezes e nao sera
+   retificado uma terceira. Os R$ 15.630,20 ficam segurados ate o relatorio de
+   dezembro fechado. Ver dre/PENDENCIA_AGOSTO_2026.md.
+
 
 Dois pontos, os dois achados na conferencia contra a relacao de faturamento da
 contabilidade, que deixava agosto R$ 15.630,20 abaixo:
