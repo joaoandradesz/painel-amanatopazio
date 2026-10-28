@@ -118,11 +118,11 @@ nome=lambda n: NOMES.get(n,n)
 H=[]
 # ============ 01 capa
 H.append(sec("Setembro/2026",
- '<span class="eyebrow">Relatório Gerencial · fechamento</span>'
- '<h2 class="editorial xl" style="margin-top:18px;max-width:1120px;">Setembro de 2026,<br>'
- '<span style="color:var(--orange);">com o caixa do próprio mês.</span></h2>'
- '<p class="lede" style="max-width:920px;font-size:19px;margin-top:18px;">Grupo Amana + Pousada Topázio. '
- 'O resultado e o caixa fecham na mesma data: 30 de setembro, conta a conta contra os extratos dos bancos.</p>'
+ '<span class="eyebrow">Fechamento · 30 de setembro de 2026</span>'
+ '<h2 class="editorial xl" style="margin-top:18px;max-width:1150px;font-size:clamp(42px,5vw,72px);">'
+ 'Relatório Gerencial Setembro<br><span style="color:var(--orange);">Amana e Topázio</span></h2>'
+ '<p class="lede" style="max-width:920px;font-size:19px;margin-top:18px;">O resultado e o caixa fecham na '
+ 'mesma data: 30 de setembro, conta a conta contra os extratos dos bancos.</p>'
  '<div class="rule" style="margin:28px 0 24px 0;"></div>'
  '<p class="body-text" style="font-size:15px;max-width:940px;">A receita recuou %s contra agosto e o custo fixo '
  'ficou praticamente igual — é isso que leva o EBITDA de %s para %s da receita. A operação segue acima do ponto '
