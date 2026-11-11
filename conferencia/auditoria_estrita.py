@@ -37,13 +37,32 @@ def audita(D):
                         tot+=1
                         if abs(R2(cd["total"])-det.get(c,0))>0.004: ruim.append(["CAIXA",e,m,sec,g,"",c,R2(cd["total"]),det.get(c,0)])
     return tot,ruim
+# A auditoria acima compara DADO com DADO e por isso nao viu o bug de 11/11/2026:
+# a linha do caixa mostrava 25.129,66 e o clique abria o lancamento da DRE,
+# 46.270,91. Os dois indices estavam certos; errado era o indice que a PAGINA
+# escolhia, porque txBoxInner caia no REGIME global em vez de perguntar a tabela
+# em que estava -- e o seletor de tabela e independente do seletor de regime.
+# ponytail: checagem textual das quatro chamadas. Teto: nao executa o render;
+# se o codigo for reescrito com outro nome de funcao, trocar por teste no DOM.
+ESPERADO=[
+  ("DRE conta pelo indice da DRE",      "entries.forEach(([cn,v])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,false)"),
+  ("DRE abre o detalhe da DRE",         "${txBoxInner(nm,cols===2,MES,false)}"),
+  ("caixa conta pelo indice do caixa",  "cats.forEach(([cn,c])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,true)"),
+  ("caixa abre o detalhe do caixa",     "${txBoxInner(nm,false,MES,true)}"),
+]
+def confere_render(arq):
+    s=open(arq,encoding="utf-8").read()
+    return [nome for nome,trecho in ESPERADO if s.count(trecho)!=1]
+
 if __name__=="__main__":
     arq=sys.argv[1] if len(sys.argv)>1 else "/Users/joaoandrade/painel-amanatopazio/index.html"
     tot,ruim=audita(carrega(arq))
     f=lambda v: format(R2(v),",.2f").replace(",","@").replace(".",",").replace("@",".")
+    falhas=confere_render(arq)
+    print("cada tabela abre o detalhe do proprio indice: %s"%("sim" if not falhas else "NAO -> "+", ".join(falhas)))
     print("linhas clicaveis testadas uma a uma: %d"%tot)
     print("linhas que mostram um valor e abrem outro: %d"%len(ruim))
     for r in ruim[:40]:
         print("   %-5s %-8s %-5s %-44s %-30s linha %12s detalhe %12s"%(r[0],r[1],r[2],(r[3]+"/"+r[4]+"/"+r[5])[:44],r[6][:30],f(r[7]),f(r[8])))
     if len(ruim)>40: print("   ... e mais %d"%(len(ruim)-40))
-    sys.exit(1 if ruim else 0)
+    sys.exit(1 if (ruim or falhas) else 0)

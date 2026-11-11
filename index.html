@@ -1271,9 +1271,9 @@ function compRow(pre,b,label,cats,cols){
   if(!has && Math.abs(tot)<.4) return '';   // linha sem movimento no periodo nao entra
   if(SOCIOS) return `<tr class="x-comp"><td><span class="chv none">&nbsp;</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${avTd(tot)}${cols>2?'<td class="c"></td>':''}</tr>`;
   let H=`<tr class="x-comp" ${has?`onclick="togGrp(this,'${pre}-${b}')"`:''}><td><span class="chv ${has?'':'none'}">▸</span>${label}</td><td class="v ${NC(tot)}">${fmt(tot)}</td>${avTd(tot)}${cols>2?'<td class="c"></td>':''}</tr>`;
-  entries.forEach(([cn,v])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,true).filter(t=>Math.abs(t.v)>.004);const ck=tx.length>0;
+  entries.forEach(([cn,v])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,false).filter(t=>Math.abs(t.v)>.004);const ck=tx.length>0;
     H+=`<tr class="x-catrow grp-${pre}-${b} gh ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(v)}">${fmt(v)}</td>${avTd(v,undefined,true)}${cols>2?`<td class="c">${tx.length||'—'}</td>`:''}</tr>`;
-    if(ck)H+=`<tr class="x-detail grp-${pre}-${b} gh"><td colspan="${cols+1}">${txBoxInner(nm,cols===2)}</td></tr>`;
+    if(ck)H+=`<tr class="x-detail grp-${pre}-${b} gh"><td colspan="${cols+1}">${txBoxInner(nm,cols===2,MES,false)}</td></tr>`;
   });
   return H;
 }
@@ -1372,7 +1372,7 @@ function fcSection(pre,sid,label,prefixes){
     H+=`<tr class="x-comp lvl1 anc-${S}" ${cats.length?`onclick="togLvl(this,'${G}','hg')"`:''}><td><span class="chv ${cats.length?'':'none'}">▸</span>${gname}</td><td class="v ${NC(gd.total)}">${fmt(gd.total)}</td>${avTd(gd.total,undefined,true)}<td class="c"></td></tr>`;
     cats.forEach(([cn,c])=>{const nm=cleanCat(cn);const tx=txOf(nm,MES,true).filter(t=>Math.abs(t.v)>.004);const ck=tx.length>0;
       H+=`<tr class="x-catrow lvl2 anc-${S} anc-${G} hg ${ck?'':'noclick'}" ${ck?'onclick="xtog(this)"':''}><td><span class="ic ${ck?'':'none'}"></span>${nm}</td><td class="v ${NC(c.total)}">${fmt(c.total)}</td>${avTd(c.total,undefined,true)}<td class="c">${tx.length||'—'}</td></tr>`;
-      if(ck)H+=`<tr class="x-detail anc-${S} anc-${G} hg"><td colspan="4">${txBoxInner(nm,false)}</td></tr>`;
+      if(ck)H+=`<tr class="x-detail anc-${S} anc-${G} hg"><td colspan="4">${txBoxInner(nm,false,MES,true)}</td></tr>`;
     });
   });
   return H;
