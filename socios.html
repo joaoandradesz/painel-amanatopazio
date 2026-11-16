@@ -29,6 +29,14 @@ body{font-family:'Inter',sans-serif;background:var(--offwhite);color:var(--ink);
   text-decoration:none;padding:8px 13px;border-radius:8px;transition:.2s;letter-spacing:.01em}
 .nav-links a:hover{color:#fff;background:rgba(255,255,255,.07)}
 .nav-links a.on{color:var(--navy);background:var(--orange)}
+/* 16/11/2026, pedido do Tiago: a projecao de caixa deixa de ser uma URL que so
+   eu sei e passa a ser um campo do painel. O botao carrega a DATA da projecao,
+   nao a do painel: sao dois documentos com cadencia diferente. */
+.proj{display:inline-flex;align-items:center;gap:9px;margin-top:13px;padding:9px 15px;
+  border-radius:10px;background:var(--orange);color:var(--navy);text-decoration:none;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:700}
+.proj:hover{filter:brightness(1.07)}
+.proj i{font-style:normal;font-weight:600;opacity:.72;font-size:11.5px}
 @media(max-width:820px){.nav-links{display:none}}
 
 /* ---------- hero ---------- */
@@ -554,6 +562,9 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 .xtbl th.av,.xtbl td.av{width:74px;text-align:right;white-space:nowrap;
   font-variant-numeric:tabular-nums;font-size:.82em;color:#6B7280;padding-right:10px}
 .xtbl td.av.base{font-weight:700;color:#111}
+/* 16/11/2026: percentual negativo em linha de resultado sai na cor de saida —
+   o sinal sozinho, em fonte pequena e cinza, passava batido. */
+td.av.neg,i.avin.neg{color:#C0392B}
 .xtbl tr.x-ebit td.av,.xtbl tr.x-ll td.av,.xtbl tr.x-sub td.av,.xtbl tr.x-result td.av{color:#111;font-weight:600}
 .xtbl td.av.dim{color:#9CA3AF}
 
@@ -702,7 +713,7 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
 <nav class="nav"><div class="wrap">
   <img id="navlogo" alt="Exact BR">
   <div class="nav-links">
-    <a href="#geral" class="on">Visão geral</a><a href="#pizza">Saídas</a><a href="#comercial">Comercial</a><a href="#relatorios">Relatórios</a>
+    <a href="#geral" class="on">Visão geral</a><a href="#pizza">Saídas</a><a href="#comercial">Comercial</a><a href="#relatorios">Relatórios</a><a href="caixa.html">Projeção de caixa</a>
   </div>
   
 </div></nav>
@@ -711,6 +722,7 @@ body.socios .xm-comp,body.socios .x-comp{cursor:default}
   <div class="eyebrow">Visão dos sócios · 2026</div>
   <h1 id="heroTitle"></h1>
   <div class="cnpjline" id="heroCnpj"></div>
+  <div><a class="proj" href="caixa.html">Projeção de caixa e compromissos <i id="projData"></i></a></div>
   <div class="mespills" id="mespills"></div>
   <div class="regsw" id="regsw"><span class="reglab">Ver por:</span><button data-r="caixa" onclick="setRegime('caixa')">Caixa</button><button data-r="competencia" class="on" onclick="setRegime('competencia')">Competência</button></div>
   <div class="waterfall">
@@ -1229,28 +1241,35 @@ document.addEventListener('click',function(ev){const td=ev.target.closest('td.xc
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeCell();});
 /* ===== matriz: célula com centavos, clicável quando há categoria ===== */
 const SEM_DET=new Set(["Intercompany não casado", "Juros Pagos*", "Multas Pagas*", "Descontos Obtidos*"]);
-function cellTd(v,cat,mk,isTot,mi){const z=Math.abs(v)<0.005;
+function cellTd(v,cat,mk,isTot,mi,sinal){const z=Math.abs(v)<0.005;
   /* linha calculada ou valor que mora na baixa do titulo: nao abre lista */
   const clic=cat&&!z&&!SEM_DET.has(cat);
   const cls=[z?'zero':(v<0?'neg':''),isTot?'tt':'',clic?'xcell':''].filter(Boolean).join(' ');
   const attr=clic?` data-cat="${String(cat).replace(/"/g,'&quot;')}" data-mk="${mk}"`:'';
-  const pct=(AVM&&mi!=null&&!z)?avPct(v,AVM[mi]):'';
+  const pct=(AVM&&mi!=null&&!z)?avPct(v,AVM[mi],sinal):'';
   return `<td class="${cls}"${attr}>${z?'–':fmt(v)}${pct}</td>`;}
 function matrixHead(ms){return `<thead><tr><th class="l">Categoria</th>${(ms||MS()).map(m=>`<th>${ML[m]}</th>`).join('')}<th class="tt">Total</th><th class="av">AV %</th></tr></thead>`;}
-function mrowS(cls,label,vals,tot){return `<tr class="${cls}"><td class="l">${label}</td>${vals.map((v,i)=>cellTd(v,null,null,false,i)).join('')}<td class="tt ${tot<0?'neg':''}">${fmt(tot)}</td>${avTd(tot)}</tr>`;}
+function mrowS(cls,label,vals,tot){const S=(cls==='ebit'||cls==='res');
+  return `<tr class="${cls}"><td class="l">${label}</td>${vals.map((v,i)=>cellTd(v,null,null,false,i,S)).join('')}<td class="tt ${tot<0?'neg':''}">${fmt(tot)}</td>${avTd(tot,undefined,false,S)}</tr>`;}
 
 // base da analise vertical: receita bruta na DRE, entradas no DFC
 var AVB=0, AVM=null;
 function avSet(v){AVB=Math.abs(v||0);}
 // AVM: base de cada mes, na mesma ordem de MS() (usado so na matriz)
 function avSetM(arr){AVM=(arr||[]).map(v=>Math.abs(v||0));}
-function avPct(v,base){const b=Math.abs(base||0);
+function avPct(v,base,sinal){const b=Math.abs(base||0);
   if(!b||Math.abs(v)<0.005) return '';
-  return `<i class="avin">${(Math.abs(v)/b*100).toFixed(1).replace('.',',')}%</i>`;}
-function avTd(v,base,dim){const b=(base===undefined?AVB:Math.abs(base||0));
+  /* 16/11/2026: linha de RESULTADO carrega o sinal. A geracao de caixa
+     operacional de abril era -28.050,60 e o percentual saia "6,3%", com a
+     mesma cara de mes bom — o indicador que o Tiago pediu para destacar
+     estava escondendo o unico fato que importa nele. Linha de componente
+     (custo, despesa) continua sem sinal: lá ele e redundante. */
+  const p=(sinal?v:Math.abs(v))/b*100;
+  return `<i class="avin${sinal&&p<0?' neg':''}">${p.toFixed(1).replace('.',',')}%</i>`;}
+function avTd(v,base,dim,sinal){const b=(base===undefined?AVB:Math.abs(base||0));
   if(!b||Math.abs(v)<0.005) return '<td class="av dim">–</td>';
-  const p=(Math.abs(v)/b*100);
-  return `<td class="av${dim?' dim':''}">${p.toFixed(1).replace('.',',')}%</td>`;}
+  const p=(sinal?v:Math.abs(v))/b*100;
+  return `<td class="av${dim?' dim':''}${sinal&&p<0?' neg':''}">${p.toFixed(1).replace('.',',')}%</td>`;}
 function compRow(pre,b,label,cats,cols){
   cats=cats||{};
   const entries=Object.entries(cats).filter(([n,v])=>Math.abs(v)>.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
@@ -1339,10 +1358,10 @@ function renderFC(){
   H+=fcSection(pre,'entradas','(+) Recebimentos',['1.']);
   H+=fcSection(pre,'custos','(–) Custos',['2.1']);
   H+=fcSection(pre,'despesas','(–) Despesas',['2.2','2.3','2.4','2.5','2.6']);
-  H+=`<tr class="x-gcoper"><td>= Geração de caixa operacional</td><td class="v ${NC(gcOperP(MES))}">${fmt(gcOperP(MES))}</td>${avTd(gcOperP(MES))}<td class="c"></td></tr>`;
+  H+=`<tr class="x-gcoper"><td>= Geração de caixa operacional</td><td class="v ${NC(gcOperP(MES))}">${fmt(gcOperP(MES))}</td>${avTd(gcOperP(MES),undefined,false,true)}<td class="c"></td></tr>`;
   H+=fcSection(pre,'investimentos','(–) Investimentos e empréstimos',['2.7','3.0']);
   H+=fcSection(pre,'demais','(±) Não operacional',['2.8','2.9']);
-  H+=`<tr class="x-result"><td>= Geração de caixa final <span style="font-weight:500;color:rgba(255,255,255,.72)">· após investimento, empréstimo e não operacional</span></td><td class="v ${NC(dfc.resultado)}">${fmt(dfc.resultado)}</td>${avTd(dfc.resultado)}<td class="c"></td></tr>`;
+  H+=`<tr class="x-result"><td>= Geração de caixa final <span style="font-weight:500;color:rgba(255,255,255,.72)">· após investimento, empréstimo e não operacional</span></td><td class="v ${NC(dfc.resultado)}">${fmt(dfc.resultado)}</td>${avTd(dfc.resultado,undefined,false,true)}<td class="c"></td></tr>`;
   H+=saldoLinha('fcs','sf','Saldo final','acumulado');
   bx.innerHTML=H;
   document.getElementById('fcNote').innerHTML=`<b>Regime de caixa · ${mesLongo(MES)}.</b>${anoDe(MES)===2025?' <b>Fonte 2025:</b> base conciliada com os extratos, saldos do Relatório Gerencial.':''}${String(MES)==='9'?' <b>Setembro está em andamento</b> — extrato até '+(D_ATE_SET)+'. Conferido contra os extratos <b>consolidados</b> do Santander e do Bradesco: na Topázio, a conta corrente já fecha em zero igual ao extrato; falta reclassificar R$ 56.741,56 de resgate do ContaMax que entraram na categoria Rendimentos sem a perna de saída na aplicação — são transferência entre conta e aplicação, por isso ficam fora do fluxo, e a diferença não conciliada abaixo zera quando a contrapartida for lançada na tela do Omie. Na Amana, <b>todas as contas bancárias já fecham com o extrato</b> em 30/09: Santander em zero na conta corrente e R$ 236.178,41 no ContaMax, Bradesco em R$ 1,00 com R$ 78.811,59 no CDB, InfinitePay R$ 11.921,00 e Mercado Pago R$ 632,55. A conta GetNet ficou em -R$ 57.369,61 porque as vendas de cartão de 26 a 30/09 ainda não entraram — ela é recebível de cartão, não banco, e se acerta quando o arquivo da GetNet for importado. Na Topázio falta reclassificar R$ 56.741,56 de resgate do ContaMax, que é a diferença não conciliada abaixo.':''} Recebimentos → custos → despesas → investimentos → geração de caixa. Considera apenas o que transitou por conta bancária. Clique na setinha para abrir cada nível e nos lançamentos.`;
@@ -1970,4 +1989,13 @@ function exportPDF(){ pdocBuild(); window.print(); }
 addEventListener('beforeprint',function(){ if(!document.getElementById('pdoc').children.length) pdocBuild(); });
 addEventListener('afterprint',function(){ document.getElementById('pdoc').innerHTML=''; });
 </script><div class="modal-bg" id="cellModal" onclick="if(event.target===this)closeCell()"><div class="modal-card"><div class="modal-head"><h3 id="cellModalTitle"></h3><button class="modal-x" onclick="closeCell()">&times;</button></div><div class="modal-body" id="cellModalBody"></div></div></div>
+<script>
+/* data da projecao lida na hora do JSON dela: carimbada em tempo de geracao do
+   painel ela congelaria, porque caixa/atualiza.sh roda sem regerar o painel.
+   Falha em silencio — botao sem data e melhor que data errada. */
+fetch('caixa/dados_caixa.json').then(function(r){return r.json()}).then(function(j){
+ var e=document.getElementById('projData');
+ if(e&&j&&j.gerado)e.textContent='\u00b7 gerada em '+String(j.gerado).split(' ')[0];
+}).catch(function(){});
+</script>
 </body></html>
