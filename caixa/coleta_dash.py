@@ -55,7 +55,11 @@ HORIZONTE=90   # dias de titulos carregados; a tela filtra dentro disso
 
 def coleta(HOJE):
     FIM=HOJE+datetime.timedelta(days=HORIZONTE)
-    out={"hoje":HOJE.strftime("%d/%m/%Y"),"fim":FIM.strftime("%d/%m/%Y"),"horizonte":HORIZONTE,
+    # CORTE_SALDO=dd/mm/aaaa: saldo ate o ultimo dia com a varredura lancada
+    # (26/11/2026: novembro sem os resgates da ContaMax). Titulos seguem de HOJE.
+    _c=os.environ.get("CORTE_SALDO")
+    CORTE=min(HOJE,datetime.datetime.strptime(_c,"%d/%m/%Y").date()) if _c else HOJE
+    out={"corte":CORTE.strftime("%d/%m/%Y") if CORTE<HOJE else None,"hoje":HOJE.strftime("%d/%m/%Y"),"fim":FIM.strftime("%d/%m/%Y"),"horizonte":HORIZONTE,
          "ancora":ANCORA_DATA.strftime("%d/%m/%Y"),
          "gerado":datetime.datetime.now().strftime("%d/%m/%Y às %H:%M"),"ents":{}}
     for emp,cfg in EMP.items():
@@ -64,7 +68,7 @@ def coleta(HOJE):
         for cod,nome in cfg["contas"]:
             r=call(emp,"financas/extrato","ListarExtrato",
                    {"nCodCC":cod,"dPeriodoInicial":(ANCORA_DATA+datetime.timedelta(days=1)).strftime("%d/%m/%Y"),
-                    "dPeriodoFinal":HOJE.strftime("%d/%m/%Y")})
+                    "dPeriodoFinal":CORTE.strftime("%d/%m/%Y")})
             L=[x for x in (r.get("listaMovimentos") or []) if not (x.get("cDesCliente") or "").startswith("SALDO")]
             sit=lambda x:(x.get("cSituacao") or "")
             mv=sum(x.get("nValorDocumento") or 0 for x in L if sit(x)=="Conciliado")

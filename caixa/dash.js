@@ -173,9 +173,10 @@ function render(){
       <td class="l">${d.d.slice(0,5)}</td><td style="color:#6B7280;font-size:10.5px">${d.dow}</td>
       <td class="n ${d.ent?'vd':'dim'}">${d.ent?f(d.ent):'—'}</td><td class="n ${d.sai?'vm':'dim'}">${d.sai?f(d.sai):'—'}</td>
       <td class="n ${net>0?'vd':(net<0?'vm':'dim')}">${net?sg(net):'—'}</td><td class="n">${f(d.saldo)}</td></tr>`;}).join('');
-  document.getElementById('app').innerHTML=periodoBar()+alerta+`
+  const avisoCorte=!D.meta.corte?'':`<div class="alert"><span class="tg">Saldo em ${D.meta.corte}</span><p>O saldo bancário é a posição de <b>${D.meta.corte}</b>, último dia com a varredura entre conta corrente e aplicação lançada no Omie. De 01/11 até hoje os movimentos ainda não entram: os resgates da ContaMax de novembro foram pedidos ao CSC. A projeção parte desse saldo e soma os títulos em aberto a partir de ${D.meta.hoje}.</p></div>`;
+  document.getElementById('app').innerHTML=periodoBar()+avisoCorte+alerta+`
   <div class="kpis">
-    <div class="kpi"><div class="e">Caixa hoje</div><div class="v ${x.saldo_hoje<0?'vm':'o'}">${f(x.saldo_hoje)}</div><div class="s">era ${f(x.contas.reduce((a,b)=>a+b.ini,0))} na âncora de ${D.meta.ancora}</div></div>
+    <div class="kpi"><div class="e">${D.meta.corte?'Caixa em '+D.meta.corte.slice(0,5):'Caixa hoje'}</div><div class="v ${x.saldo_hoje<0?'vm':'o'}">${f(x.saldo_hoje)}</div><div class="s">era ${f(x.contas.reduce((a,b)=>a+b.ini,0))} na âncora de ${D.meta.ancora}</div></div>
     <div class="kpi"><div class="e">A receber · ${nDias()} dias</div><div class="v vd">${f(K.rec)}</div><div class="s">${itens().filter(i=>i.lado==='receber').length} títulos em aberto</div></div>
     <div class="kpi"><div class="e">A pagar · ${nDias()} dias</div><div class="v vm">${f(K.pag)}</div><div class="s">${itens().filter(i=>i.lado==='pagar').length} títulos em aberto</div></div>
     <div class="kpi"><div class="e">Menor saldo</div><div class="v ${K.mn.saldo<0?'vm':''}">${f(K.mn.saldo)}</div><div class="s">em ${K.mn.d} · termina o período em ${f(K.fim)}</div></div>

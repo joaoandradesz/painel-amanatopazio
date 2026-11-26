@@ -34,7 +34,7 @@ for e,x in ents.items():
     x["naoconc"]=sum(c["naoconc"] for c in x["contas"])
     x["previsto"]=sum(c.get("previsto") or 0 for c in x["contas"])
 
-BLOB=json.dumps({"meta":{k:D[k] for k in ("hoje","fim","ancora","gerado")},
+BLOB=json.dumps({"meta":{**{k:D[k] for k in ("hoje","fim","ancora","gerado")},"corte":D.get("corte")},
                  "deparar":D.get("deparar"),
                  "horizonte":D.get("horizonte",90),
                  "ents":{k:{kk:vv for kk,vv in v.items()} for k,v in ents.items()}},ensure_ascii=False)
