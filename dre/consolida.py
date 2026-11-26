@@ -12,18 +12,23 @@ IC="Compra de Diarias a Topazio"
 COM_SUFIXO=("01. Receita Bruta de Vendas","01. Outras Receitas")
 SUF={"amana":" (Amana)","topazio":" (Topázio)"}
 
-def consolida(tree_por_emp,tx_por_emp=None):
-    """tree_por_emp = {'amana':arvore,'topazio':arvore}; arvore = {t:{g:{co:[{cat,v}]}}}"""
-    arv={}; txc={}
+def consolida(tree_por_emp,tx_por_emp=None,ic_rec=None):
+    """tree_por_emp = {'amana':arvore,'topazio':arvore}; arvore = {t:{g:{co:[{cat,v}]}}}
+    ic_rec = {'topazio':{cat:valor}} -- receita intercompany a eliminar tambem (a perna
+    da Topazio faturada contra a Amana). Desde out/2026 a Topazio voltou a faturar a
+    Amana: sem isso o consolidado conta a venda ao hospede duas vezes."""
+    arv={}; txc={}; ic_rec=ic_rec or {}
     for emp in ("amana","topazio"):
         for g1,d1 in (tree_por_emp.get(emp) or {}).items():
             for g2,d2 in d1.items():
                 for g3,lst in d2.items():
                     for it in lst:
                         if emp=="amana" and it["cat"]==IC: continue
+                        v=it["v"]-(ic_rec.get(emp) or {}).get(it["cat"],0)
+                        if abs(v)<0.005: continue
                         nome=it["cat"]+SUF[emp] if g3 in COM_SUFIXO else it["cat"]
                         no=arv.setdefault(g1,{}).setdefault(g2,{}).setdefault(g3,{})
-                        no[nome]=R2(no.get(nome,0)+it["v"])
+                        no[nome]=R2(no.get(nome,0)+v)
                         tx=(tx_por_emp or {}).get(emp) or {}
                         if it["cat"] in tx: txc.setdefault(nome,[]).extend(tx[it["cat"]])
     for g1 in arv:

@@ -15,7 +15,7 @@ sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from consolida import consolida,carrega
 
 MES=os.environ.get("MES","9"); ANO="2026"
-PAINEL=os.path.expanduser("~/painel-amanatopazio/")
+PAINEL=os.environ.get("PAINEL",os.path.expanduser("~/painel-amanatopazio/")).rstrip("/")+"/"
 BASE=os.path.join(os.path.dirname(os.path.abspath(__file__)),os.environ.get("BASE","set.json"))
 R2=lambda v: round((v or 0)+0.0,2)
 f=lambda v: format(R2(v),",.2f").replace(",","@").replace(".",",").replace("@",".")
@@ -31,6 +31,11 @@ MAN={
   "Adiantamentos":(None,("2. Despesas","11. Fixas","01. Despesas com Pessoal")),
   "ISS":(None,("1. Lucro Bruto","01. Receita Líquida Operacional","03. Deduções de Receita")),
   "Alimentação de Colaboradores Operacional":(None,("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação")),
+  # out/2026: remuneracao variavel. Os 3 lancamentos sao Marcela e Renato (diretoria,
+  # pro-labore em Despesas com Pessoal) e Rafaela Sales (Salarios CSC, mesma posicao).
+  # Decisao do Joao em 18/11/2026. O codigo_dre do Omie poe em Vendas e Marketing;
+  # o gerencial poe em Pessoal, porque as tres pessoas ja sao remuneradas ali.
+  "Variável":(None,("2. Despesas","11. Fixas","01. Despesas com Pessoal")),
  },
  "topazio":{
   # padrao definido pelo Tiago em 26/10/2026: premiacao num lugar so, inclusive o
@@ -47,6 +52,13 @@ MAN={
   "Manutenção predial":(None,("3. Investimentos","01. Investimentos","01. Ativos")),
   # decisao A do João: gestao e administrativo -- fica onde jan-ago ja punha
   "Prestadores Recorrente - Gestão":(None,("2. Despesas","11. Fixas","02. Despesa Indireta de Pessoal Indireto")),
+  # out/2026: a Topazio voltou a faturar hospedagem contra a Amana (4 NFs, primeira
+  # vez desde maio/2026). Receita bruta, como a Amana. O sufixo "(Topázio)" do
+  # consolida.py impede que se some com a "Receita de Hospedagem (Amana)".
+  "Hospedagem":(None,("1. Lucro Bruto","01. Receita Líquida Operacional","01. Receita Bruta de Vendas")),
+  "Serviços Extras - Op/Custos":(None,("1. Lucro Bruto","21. Custos","06. Prestação de serviços operacionais")),
+  # regra revisada em out/2026: aluguel de veiculo e arrendamento
+  "Arrendamento de veículos":(None,("1. Lucro Bruto","21. Custos","01. Arrendamento")),
  }}
 MAN={e:{nz(k):v for k,v in d.items()} for e,d in MAN.items()}
 
@@ -182,7 +194,15 @@ def main():
 
     print("\n== arvore de %s/%s"%(MES,ANO))
     por_emp=arvore_mes(D)
-    arvC,txC=consolida({e:por_emp[e][0] for e in por_emp},{e:por_emp[e][1] for e in por_emp})
+    # receita intercompany: nota da Topazio cujo tomador e a Amana
+    B=json.load(open(BASE)); IC_REC={"topazio":collections.defaultdict(float)}
+    for x in B["topazio"]["itens"]:
+        if x["lado"]=="receber" and x["cat"]=="1.01.02" and x["nome"].upper().startswith("AMANA EMPREENDIMENTOS"):
+            IC_REC["topazio"][B["topazio"]["categorias"][x["cat"]]["desc"]]+=x["v"]
+    txT={k:[t for t in v if not (k in IC_REC["topazio"] and t["p"].upper().startswith("AMANA EMPREENDIMENTOS"))]
+         for k,v in por_emp["topazio"][1].items()}
+    print("  receita intercompany da Topazio eliminada no consolidado:",{k:f(v) for k,v in IC_REC["topazio"].items()})
+    arvC,txC=consolida({e:por_emp[e][0] for e in por_emp},{"amana":por_emp["amana"][1],"topazio":txT},IC_REC)
     ordena(arvC)
     totC=R2(sum(x["v"] for t,gs in arvC.items() for g,cos in gs.items() for co,l in cos.items() for x in l))
     soma=R2(sum(R2(sum(x["v"] for t,gs in por_emp[e][0].items() for g,cos in gs.items() for co,l in cos.items() for x in l)) for e in por_emp))
@@ -234,9 +254,15 @@ def main():
     print("  trava: nenhuma categoria em duas posicoes")
     D["sem_dre"]=[m for m in (D.get("sem_dre") or []) if str(m)!=MES]
     if int(MES) not in D["anos"][ANO]["meses"]: D["anos"][ANO]["meses"]=sorted(D["anos"][ANO]["meses"]+[int(MES)])
-    D["fonte"]=("DFC pelo extrato do Omie (jan/26 a 30/09/26 e ago–dez/25) · DRE pelos relatórios oficiais do Omie "
-                "(jan a jul/26), pela base de títulos do Omie (ago e set/26) e pela base caixa em 2025")
-    D["gerado_em"]="27/10/2026"
+    if MES=="10":
+        D["fonte"]=("DFC pelo extrato do Omie (jan/26 a 31/10/26 e ago–dez/25) · DRE pelos relatórios oficiais do Omie "
+                    "(jan a jul/26), pela base de títulos do Omie (ago a out/26; em out/26 a receita de hospedagem sai "
+                    "da relação de NFS-e autorizadas) e pela base caixa em 2025")
+        D["gerado_em"]=os.environ.get("GERADO_EM","25/11/2026")
+    else:
+        D["fonte"]=("DFC pelo extrato do Omie (jan/26 a 30/09/26 e ago–dez/25) · DRE pelos relatórios oficiais do Omie "
+                    "(jan a jul/26), pela base de títulos do Omie (ago e set/26) e pela base caixa em 2025")
+        D["gerado_em"]="27/10/2026"
     if os.environ.get("GRAVA"):
         blob=json.dumps(D,ensure_ascii=False)
         for arq in ("index.html","socios.html"):

@@ -5,7 +5,16 @@ e o cadastro de categorias com dadosDRE."""
 import sys,json,collections,datetime; sys.path.insert(0,'.')
 from api import call
 R2=lambda v: round((v or 0)+0.0,2)
-MES="09/2026"
+import os,calendar
+MN=int(os.environ.get("MES","9")); MES="%02d/2026"%MN
+ULT="%02d/%02d/2026"%(calendar.monthrange(2026,MN)[1],MN)
+SAIDA=os.environ.get("SAIDA","set.json")
+# Receita de hospedagem pela NOTA, nao pelo status do titulo (decisao do Joao, 25/11/2026):
+# titulo 1.01.02 cancelado no Omie entra se a nota consta da relacao de NFS-e autorizadas;
+# titulo 1.01.02 sem numero de nota fica fora -- recebido sem faturamento e adiantamento.
+NFSE=json.load(open(os.environ["NFSE"])) if os.environ.get("NFSE") else None
+HOSP="1.01.02"
+nfn=lambda t: (t.get("numero_documento_fiscal") or "").strip().lstrip("0")
 CC={"amana":[5174110361,5177543696,5177546899,5177550204,5186771952,5196586286,5196707350,5199925490,
              5212185049,5212188724,5226179398,5233749189,5233749730,5262394107,5272112673,5273930737,
              5284310859,5291963746],
@@ -41,7 +50,12 @@ for emp in ("amana","topazio"):
         for t in T:
             em=(t.get("data_emissao") or "")
             if len(em)!=10 or em[3:]!=MES: continue
-            if (t.get("status_titulo") or "").upper()=="CANCELADO": continue
+            canc=(t.get("status_titulo") or "").upper()=="CANCELADO"
+            hosp=t.get("codigo_categoria")==HOSP
+            if NFSE and hosp and lado=="receber":
+                if not nfn(t): continue
+                if canc and nfn(t) not in NFSE[emp]: continue
+            elif canc: continue
             pernas=t.get("categorias") or []
             if not pernas:
                 pernas=[{"codigo_categoria":t.get("codigo_categoria"),"valor":t.get("valor_documento")}]
@@ -54,7 +68,7 @@ for emp in ("amana","topazio"):
                     "st":(t.get("status_titulo") or "").title()})
     avulsos=[]
     for cod in CC[emp]:
-        r=call(emp,"financas/extrato","ListarExtrato",{"nCodCC":cod,"dPeriodoInicial":"01/09/2026","dPeriodoFinal":"30/09/2026"})
+        r=call(emp,"financas/extrato","ListarExtrato",{"nCodCC":cod,"dPeriodoInicial":"01/"+MES,"dPeriodoFinal":ULT})
         for x in (r.get("listaMovimentos") or []):
             o=(x.get("cOrigem") or "")
             if o not in ("Débito em Conta Corrente","Crédito em Conta Corrente"): continue
@@ -64,6 +78,6 @@ for emp in ("amana","topazio"):
                 "v":R2(x.get("nValorDocumento")),"nome":(x.get("cRazCliente") or x.get("cDesCliente") or "—").strip(),
                 "nf":"","st":x.get("cSituacao") or ""})
     out[emp]={"clientes":len(cli),"categorias":cat,"itens":itens,"avulsos":avulsos}
-    print("%-8s %4d pernas de titulo (emissao 09/2026) | %3d avulsos | %d categorias"%(
-        emp,len(itens),len(avulsos),len(cat)))
-json.dump(out,open("set.json","w"),ensure_ascii=False)
+    print("%-8s %4d pernas de titulo (emissao %s) | %3d avulsos | %d categorias"%(
+        emp,len(itens),MES,len(avulsos),len(cat)))
+json.dump(out,open(SAIDA,"w"),ensure_ascii=False)

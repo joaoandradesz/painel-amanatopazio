@@ -7,3 +7,7 @@ dre/rec_amana_atual.json
 dre/pag_amana_atual.json
 dre/conf_11_agosto.json
 ferramentas/
+
+# puxadas de outubro com nome de hospede (refazer: MES=10 SAIDA=out25.json NFSE=nfse_out.json python3 puxa_set.py)
+dre/out.json
+dre/out25.json
