@@ -36,8 +36,7 @@ RAIZ=os.path.expanduser("~/painel-amanatopazio/")
 # o renome e por empresa: "ISS | Permanencia" virou "ISS" so na Amana; na
 # Topazio o painel publicou com o nome do Omie.
 RENOMES={
- "amana":{"Pontuação - Equipe e Diretoria":"Pontuação e Premiação",
-          "Variável":"Pontuação e Premiação",   # 2.02.97 renomeada no Omie em out/2026
+ "amana":{"Pontuação - Equipe e Diretoria":"Variável",   # 2.02.97, nome do Omie desde out/2026
           "ISS | Permanência":"ISS"},
  "topazio":{"Premiação - equipe":"Pontuação e Premiação",
           "Devolução de pagamento indevido / a maior":"Devolução de Pagamento Indevido / A maior",

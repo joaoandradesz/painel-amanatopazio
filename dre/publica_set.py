@@ -27,14 +27,14 @@ def nz(s):
 MAN={
  "amana":{
   "Manutenção predial - materiais":(None,("1. Lucro Bruto","21. Custos","13. Manutenção")),
-  "Pontuação - Equipe e Diretoria":("Pontuação e Premiação",("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
+  "Pontuação - Equipe e Diretoria":("Variável",("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
   "Adiantamentos":(None,("2. Despesas","11. Fixas","01. Despesas com Pessoal")),
   "ISS":(None,("1. Lucro Bruto","01. Receita Líquida Operacional","03. Deduções de Receita")),
   "Alimentação de Colaboradores Operacional":(None,("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação")),
-  # "Variável" e a 2.02.97 RENOMEADA no Omie em out/2026 -- e a mesma conta da
-  # pontuacao desde dez/25. O Joao (25/11/2026) mandou voltar para a linha de sempre:
-  # mesmo nome e mesma posicao de jan-set. (Substitui o mapeamento de 18/11 para Pessoal.)
-  "Variável":("Pontuação e Premiação",("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
+  # "Variável" e a 2.02.97 RENOMEADA no Omie em out/2026 -- a mesma conta da pontuacao
+  # desde dez/25. Fica como esta no sistema: nome "Variável", em Vendas e Marketing (DRE
+  # do Omie), em todos os meses (Tiago e Joao, 26/11/2026; ver renomeia_variavel.py).
+  "Variável":(None,("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
  },
  "topazio":{
   # padrao definido pelo Tiago em 26/10/2026: premiacao num lugar so, inclusive o
@@ -60,7 +60,7 @@ MAN={
   "Arrendamento de veículos":(None,("1. Lucro Bruto","21. Custos","01. Arrendamento")),
  }}
 MAN={e:{nz(k):v for k,v in d.items()} for e,d in MAN.items()}
-# Variavel da Amana em out/2026 saiu em Pessoal; volta para Pontuacao e Premiacao (Joao, 25/11)
+# Variavel da Amana em out/2026 tinha saido em Pessoal; vai para a posicao do Omie
 FORCA={"amana":{nz("Variável")}}
 
 # ---------- buckets: a mesma classificacao do dbucket() da pagina ----------
