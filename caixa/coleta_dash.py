@@ -7,20 +7,24 @@ from omie_api import call
 R2=lambda v: round((v or 0)+0.0,2)
 dt=lambda s: datetime.datetime.strptime(s,"%d/%m/%Y").date()
 
-ANCORA_DATA=datetime.date(2026,9,30)
+# ancora 31/10/2026 = saldo final de outubro do DFC publicado, que fecha com o documento
+# de cada conta (OFX da conta corrente; extrato de investimento no LIQUIDO: CDB Santander
+# 318.184,84, CDB Bradesco 79.465,25, Invest Facil 9.878,17, ContaMax 208.986,17).
+# Caixinhas da Topazio sem documento: saldo do Omie em 31/10.
+ANCORA_DATA=datetime.date(2026,10,31)
 EMP={
  "amana":{"nome":"Amana","ancora":{
-    "Bradesco conta corrente":1.00,"Santander conta corrente":0.00,"InfinitePay":11921.00,
-    "Mercado Pago":632.55,"Santander ContaMax":236178.41,"Bradesco Invest Fácil":10045.43,
-    "Santander CDB DI PJ":312008.23,"Bradesco CDB DI PJ":78779.08,"GetNet":0.00},
+    "Bradesco conta corrente":1.00,"Santander conta corrente":0.00,"InfinitePay":23366.03,
+    "Mercado Pago":256.46,"Santander ContaMax":208986.17,"Bradesco Invest Fácil":9878.17,
+    "Santander CDB DI PJ":318184.84,"Bradesco CDB DI PJ":79465.25,"GetNet":0.00},
   "contas":[(5177546899,"Santander conta corrente"),(5196586286,"Santander ContaMax"),
     (5199925490,"Santander CDB DI PJ"),(5177543696,"Bradesco conta corrente"),
     (5196707350,"Bradesco Invest Fácil"),(5226179398,"Bradesco CDB DI PJ"),
     (5177550204,"InfinitePay"),(5186771952,"Mercado Pago"),(5212188724,"GetNet")],
   "getnet":5212188724},
  "topazio":{"nome":"Topázio","ancora":{
-    "Santander conta corrente":0.00,"Santander ContaMax":12683.18,"GetNet":0.00,
-    "Caixinha":140.00,"Caixinha Financeiro":0.00},
+    "Santander conta corrente":0.00,"Santander ContaMax":1357.80,"GetNet":0.00,
+    "Caixinha":154.00,"Caixinha Financeiro":0.00},
   "contas":[(3016781127,"Santander conta corrente"),(3057055408,"Santander ContaMax"),
     (3076514932,"GetNet"),(3006666402,"Caixinha"),(3093135669,"Caixinha Financeiro")],
   "getnet":3076514932}}

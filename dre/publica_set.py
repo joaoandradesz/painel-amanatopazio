@@ -31,11 +31,10 @@ MAN={
   "Adiantamentos":(None,("2. Despesas","11. Fixas","01. Despesas com Pessoal")),
   "ISS":(None,("1. Lucro Bruto","01. Receita Líquida Operacional","03. Deduções de Receita")),
   "Alimentação de Colaboradores Operacional":(None,("1. Lucro Bruto","21. Custos","05. Pessoal indireto da operação")),
-  # out/2026: remuneracao variavel. Os 3 lancamentos sao Marcela e Renato (diretoria,
-  # pro-labore em Despesas com Pessoal) e Rafaela Sales (Salarios CSC, mesma posicao).
-  # Decisao do Joao em 18/11/2026. O codigo_dre do Omie poe em Vendas e Marketing;
-  # o gerencial poe em Pessoal, porque as tres pessoas ja sao remuneradas ali.
-  "Variável":(None,("2. Despesas","11. Fixas","01. Despesas com Pessoal")),
+  # "Variável" e a 2.02.97 RENOMEADA no Omie em out/2026 -- e a mesma conta da
+  # pontuacao desde dez/25. O Joao (25/11/2026) mandou voltar para a linha de sempre:
+  # mesmo nome e mesma posicao de jan-set. (Substitui o mapeamento de 18/11 para Pessoal.)
+  "Variável":("Pontuação e Premiação",("2. Despesas","11. Fixas","04. Despesas de Vendas e Marketing")),
  },
  "topazio":{
   # padrao definido pelo Tiago em 26/10/2026: premiacao num lugar so, inclusive o
@@ -61,6 +60,8 @@ MAN={
   "Arrendamento de veículos":(None,("1. Lucro Bruto","21. Custos","01. Arrendamento")),
  }}
 MAN={e:{nz(k):v for k,v in d.items()} for e,d in MAN.items()}
+# Variavel da Amana em out/2026 saiu em Pessoal; volta para Pontuacao e Premiacao (Joao, 25/11)
+FORCA={"amana":{nz("Variável")}}
 
 # ---------- buckets: a mesma classificacao do dbucket() da pagina ----------
 RE_NAOOP=re.compile(r"pagamento indevido|devolu[çc][aã]o de pagamento indevido|^reembolsos?$|^reembolso$|empr[ée]stimos? e financiamentos?|tarifas? banc[áa]ria",re.I)
@@ -120,9 +121,11 @@ def arvore_mes(D):
             c=cat.get(x["cat"])
             if not c or not c["tem_dre"]: continue
             d=c["desc"]; k=nz(d)
-            if k in cam: nome,pos=cam[k]
-            elif k in MAN[emp]:
+            # FORCA: o de-para vence a posicao herdada -- corrige linha ja publicada no
+            # lugar errado. So o que estiver listado; o resto segue a posicao de sempre.
+            if k in FORCA.get(emp,()) or (k in MAN[emp] and k not in cam):
                 alvo,pos=MAN[emp][k]; nome=alvo or d
+            elif k in cam: nome,pos=cam[k]
             else: fora.append((x["cat"],d,x["v"])); continue
             t,g,co=pos
             arv.setdefault(t,{}).setdefault(g,{}).setdefault(co,collections.defaultdict(float))
@@ -256,8 +259,8 @@ def main():
     if int(MES) not in D["anos"][ANO]["meses"]: D["anos"][ANO]["meses"]=sorted(D["anos"][ANO]["meses"]+[int(MES)])
     if MES=="10":
         D["fonte"]=("DFC pelo extrato do Omie (jan/26 a 31/10/26 e ago–dez/25) · DRE pelos relatórios oficiais do Omie "
-                    "(jan a jul/26), pela base de títulos do Omie (ago a out/26; em out/26 a receita de hospedagem sai "
-                    "da relação de NFS-e autorizadas) e pela base caixa em 2025")
+                    "(jan a jul/26), pela base de títulos do Omie (ago a out/26; a receita de hospedagem sai da relação "
+                    "de NFS-e autorizadas em out/26 e, na Topázio, também em set/26) e pela base caixa em 2025")
         D["gerado_em"]=os.environ.get("GERADO_EM","25/11/2026")
     else:
         D["fonte"]=("DFC pelo extrato do Omie (jan/26 a 30/09/26 e ago–dez/25) · DRE pelos relatórios oficiais do Omie "
