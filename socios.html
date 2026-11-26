@@ -610,6 +610,16 @@ td.av.neg,i.avin.neg{color:#C0392B}
   padding:12px 18px;border-radius:999px;box-shadow:0 10px 26px rgba(249,115,22,.40);transition:.2s}
 .pdfbt:hover{background:#EA6A0B;transform:translateY(-1px)}
 @media(max-width:620px){.pdfbt{right:12px;bottom:12px;padding:10px 14px;font-size:11.5px}}
+/* 26/11/2026 -- celular e tablet (pedido do Joao). Nada muda no desktop. */
+@media(max-width:720px){
+ .nav .wrap{flex-wrap:wrap;height:auto;padding-top:10px;padding-bottom:10px;row-gap:8px}
+ .entsw{display:flex;width:100%;overflow-x:auto}
+ .entsw button,.entsw a{flex:1 0 auto;text-align:center}
+ .xmatrix thead th.l,.xmatrix td.l{min-width:0;width:140px;max-width:150px;white-space:normal}
+ .xmatrix tr.r3>td.l{padding-left:18px}
+ .waterfall{overflow-x:auto;-webkit-overflow-scrolling:touch}
+ #wf{min-width:480px}
+}
 
 .pdoc{display:none;counter-reset:pgc;background:#fff;color:var(--ink);font-family:'Inter',sans-serif}
 .pdoc .pg{position:relative;width:297mm;height:209.6mm;padding:10mm 13mm 7mm;background:#fff;
