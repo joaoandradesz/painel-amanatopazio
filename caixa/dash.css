@@ -85,3 +85,4 @@ tbody tr.tot td{border-top:2px solid var(--g3);border-bottom:0;font-weight:800;b
  .alert{display:block}
  .alert .tg{display:block;margin:0 0 6px}
 }
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
