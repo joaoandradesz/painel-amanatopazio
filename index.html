@@ -1765,7 +1765,7 @@ function renderOrc(){
      +card('Receita — '+per,fmt(rbR),'orçado '+fmt(rbO)+' · '+sinal(round2(rbR-rbO)))
      +card('EBITDA realizado',fmt(sr),'orçado '+fmt(so)+' · '+sinal(d))
      +card('Gasto sem orçamento',fmt(sem),'linhas que existem aqui e não no orçamento')
-     +card('Margem EBITDA',(rbR?(sr/rbR*100).toFixed(1):'0')+'%','orçada '+(rbO?(so/rbO*100).toFixed(1):'0')+'%')
+     +card('Margem EBITDA',(rbR?(sr/rbR*100).toFixed(1).replace('.',','):'0')+'%','orçada '+(rbO?(so/rbO*100).toFixed(1).replace('.',','):'0')+'%')
      +'</div>'+barra
      +'<div class="orc-wrap">'+(ORCMODO==='mes'?orcTabelaMes(SO,SR,rbOs,rbRs):orcTabelaAcum(SO,SR,ix,rbO,rbR))+'</div>'
      +'<p class="orc-nota"><b>Leitura.</b> Verde é a favor do resultado: receita acima do orçado, ou saída abaixo. '
