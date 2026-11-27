@@ -1915,7 +1915,7 @@ function renderCancCanal(){
   const sub=document.getElementById('cc-sub');
   if(sub){const ms=MS().map(String).filter(x=>CC[x]&&CC[x].length);
     sub.textContent=!ms.length?'':(isT()?((D.mes_labels[ms[0]]||'')+(ms.length>1?' a '+(D.mes_labels[ms[ms.length-1]]||''):'')):(D.mes_labels[String(MES)]||''));}
-  if(!arr.length){tb.innerHTML='';const n=document.getElementById('cc-note');if(n)n.textContent='Sem base de reservas para este período.';return;}
+  if(!arr.length){tb.innerHTML='';const n=document.getElementById('cc-note');if(n)n.textContent='Sem base de reservas para este período.';const r0=document.getElementById('cc-resumo');if(r0)r0.textContent='Sem base de reservas por canal para este período.';return;}
   const f=(n,d=0)=>Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
   const m=(n)=>'R$ '+f(n,2);
   const tcv=arr.reduce((a,x)=>a+x[3],0), tc=arr.reduce((a,x)=>a+x[1],0), tr=arr.reduce((a,x)=>a+x[2],0);
