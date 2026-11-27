@@ -9,17 +9,27 @@ WHITE=base64.b64encode(open(os.path.join(AQUI,"logo-branca.png"),"rb").read()).d
 dt=lambda s: datetime.datetime.strptime(s,"%d/%m/%Y").date()
 R2=lambda v: round((v or 0)+0.0,2)
 HOJE=dt(D["hoje"]); FIM=dt(D["fim"])
+# camada de estimativa (estimativa.py): fica em arquivo proprio para a coleta
+# nao apagar, e entra aqui marcada como fonte 'estimado', fora do saldo firme
+_EP=os.path.join(AQUI,"estimativa.json")
+EST=json.load(open(_EP,encoding="utf-8")) if os.path.exists(_EP) else {"ents":{}}
+for e,x in D["ents"].items():
+    s=EST["ents"].get(e) or {}
+    x["estimado"]=s.get("itens",[]); x["est_desp"]=s.get("despesa",[])
+    x["est_rec"]=s.get("receita"); x["est_base"]=s.get("base")
 MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"]
 DOW=["dom","seg","ter","qua","qui","sex","sáb"]
 INTER=("POUSADA TOPAZIO","AMANA EMPREENDIMENTOS")
 
 # consolidado = soma, com o intercompany marcado
 ents=dict(D["ents"])
-cons={"nome":"Consolidado","contas":[],"itens":[],
+cons={"nome":"Consolidado","contas":[],"itens":[],"agenda":[],"estimado":[],
       "atrasados":{"n":0,"receber":0.0,"pagar":0.0},"getnet":{"n":0,"bruto":0.0,"taxa":0.0}}
 for e,x in D["ents"].items():
     for c in x["contas"]: cons["contas"].append({**c,"n":"%s · %s"%(x["nome"],c["n"])})
     for i in x["itens"]: cons["itens"].append({**i,"emp":x["nome"]})
+    for k in ("agenda","estimado"):
+        for i in x.get(k) or []: cons[k].append({**i,"emp":x["nome"]})
     for k in ("n","receber","pagar"): cons["atrasados"][k]=R2(cons["atrasados"][k]+x["atrasados"][k])
     for k in ("n","bruto","taxa"): cons["getnet"][k]=R2(cons["getnet"][k]+x["getnet"][k])
 for e,x in ents.items():
@@ -34,7 +44,11 @@ for e,x in ents.items():
     x["naoconc"]=sum(c["naoconc"] for c in x["contas"])
     x["previsto"]=sum(c.get("previsto") or 0 for c in x["contas"])
 
-BLOB=json.dumps({"meta":{**{k:D[k] for k in ("hoje","fim","ancora","gerado")},"corte":D.get("corte")},
+BLOB=json.dumps({"meta":{**{k:D[k] for k in ("hoje","fim","ancora","gerado")},"corte":D.get("corte"),
+                          "est_gerado":EST.get("gerado"),
+                          "est_nota":("Estimativa: despesas recorrentes pela média de ago–out e receita pelas "
+                                      "reservas vendidas (jan e fev: receita do mesmo mês de 2026, Amana + Topázio); some o que o CSC lançar. Aparece tracejada e "
+                                      "separada do que está lançado no Omie.")},
                  "deparar":D.get("deparar"),
                  "horizonte":D.get("horizonte",90),
                  "ents":{k:{kk:vv for kk,vv in v.items()} for k,v in ents.items()}},ensure_ascii=False)

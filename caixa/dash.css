@@ -86,3 +86,24 @@ tbody tr.tot td{border-top:2px solid var(--g3);border-bottom:0;font-weight:800;b
  .alert .tg{display:block;margin:0 0 6px}
 }
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* 27/11/2026 -- camada de estimativa: o que nao esta no Omie fica claro e tracejado */
+.alert.est{background:#F8FAFC;border:1px dashed #94A3B8}
+.alert.est .tg{color:#475569}.alert.est p{color:#334155}
+tbody tr.est td{color:#64748B;font-style:italic;background:repeating-linear-gradient(135deg,#fff,#fff 6px,#F8FAFC 6px,#F8FAFC 12px)}
+tbody tr.est{cursor:pointer}tbody tr.est:hover td{background:#F1F5F9}
+td.e,th.e{color:#64748B}
+.cel .sle{font-family:'Plus Jakarta Sans',sans-serif;font-size:9.5px;font-weight:600;color:#64748B;margin-top:2px}
+.calc{font-size:12.5px;line-height:1.6;color:#334155;background:#F8FAFC;border:1px dashed #94A3B8;border-radius:8px;padding:11px 14px;margin:6px 0 14px}
+.leg{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--g5);margin:4px 0 8px}
+.leg i{display:inline-block;width:22px;height:0;border-top:2.4px solid var(--orange);vertical-align:middle;margin-right:6px}
+.leg i.t{border-top:2px dashed #F97316;opacity:.6}
+/* tabela larga (colunas da estimativa) rola dentro do bloco, nunca a pagina;
+   abaixo de 900px a primeira coluna congela: a tabela e o proprio container de rolagem */
+.sec{overflow-x:auto}
+@media(max-width:900px){
+ .sec table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+ .sec table td:first-child,.sec table th:first-child{position:sticky;left:0;z-index:1;background:#fff}
+ .sec table tr.hi td:first-child{background:var(--osoft)}
+ .sec td,.sec th{white-space:nowrap}
+}
+.kpi .s .es{color:#64748B;font-style:italic}

@@ -57,6 +57,30 @@ def titulos(emp,ep,cn,raiz):
 
 HORIZONTE=90   # dias de titulos carregados; a tela filtra dentro disso
 
+def agenda_getnet(emp,cc,HOJE,FIM,itens):
+    """Previsto da GetNet que NAO e titulo: 'Previsao de Reservas' e parcela de
+    'Adiantamento de Venda' sem titulo a receber. Em 27/11/2026 eram R$ 176.872,42
+    de previsao de reservas e 20 parcelas de adiantamento fora da tela: o painel so
+    lia titulo. 'Conta a Receber'/'Conta a Pagar' ja vem como titulo; o resto casa
+    com titulo por valor e data proxima e so entra o que sobra."""
+    g=call(emp,"financas/extrato","ListarExtrato",
+           {"nCodCC":cc,"dPeriodoInicial":HOJE.strftime("%d/%m/%Y"),"dPeriodoFinal":FIM.strftime("%d/%m/%Y")})
+    # a parcela da GetNet cai no dia util seguinte ao vencimento do titulo
+    # (titulo no domingo 13/12, agenda na segunda 14/12): casa por valor com ate
+    # 4 dias de folga, e cada titulo casa uma vez so
+    tit=[[dt(i["d"]),round(i["v"],2)] for i in itens if i["lado"]=="receber"]
+    out=[]
+    for x in g.get("listaMovimentos") or []:
+        v=x.get("nValorDocumento") or 0
+        if x.get("cSituacao")!="Previsto" or v<=0 or x.get("cOrigem") in ("Conta a Receber","Conta a Pagar"): continue
+        d=dt(x.get("dDataLancamento"))
+        par=next((t for t in tit if abs(t[1]-v)<=0.02 and abs((t[0]-d).days)<=4),None)
+        if par: tit.remove(par); continue
+        out.append({"lado":"receber","d":x.get("dDataLancamento"),"nome":x.get("cDesCliente") or "—",
+                    "cat":x.get("cDesCategoria") or "—","v":R2(v),"conta":"GetNet","doc":"",
+                    "st":"Previsto","fonte":"agenda","origem":x.get("cOrigem")})
+    return out
+
 def coleta(HOJE):
     FIM=HOJE+datetime.timedelta(days=HORIZONTE)
     # CORTE_SALDO=dd/mm/aaaa: saldo ate o ultimo dia com a varredura lancada
@@ -107,6 +131,7 @@ def coleta(HOJE):
                {"nCodCC":cfg["getnet"],"dPeriodoInicial":HOJE.strftime("%d/%m/%Y"),"dPeriodoFinal":FIM.strftime("%d/%m/%Y")})
         pv=[x for x in (g.get("listaMovimentos") or []) if (x.get("cSituacao") or "")=="Previsto"]
         out["ents"][emp]={"nome":cfg["nome"],"contas":contas,"itens":itens,"desfecho":desfecho,
+            "agenda":agenda_getnet(emp,cfg["getnet"],HOJE,FIM,itens),
             "atrasados":{"n":len(atr),"receber":R2(sum(x["v"] for x in atr if x["lado"]=="receber")),
                          "pagar":R2(sum(x["v"] for x in atr if x["lado"]=="pagar")),
                          "ids":[x["id"] for x in atr]},

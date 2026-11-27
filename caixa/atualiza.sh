@@ -5,6 +5,8 @@ set -e
 cd "$(dirname "$0")/.."
 echo "== lendo o Omie"
 python3 caixa/coleta_dash.py
+echo "== estimativa (despesa recorrente e receita ainda nao lancadas)"
+python3 caixa/estimativa.py
 echo "== montando o caixa.html"
 python3 caixa/gera_dash.py
 if git diff --quiet -- caixa.html; then
