@@ -1503,7 +1503,7 @@ function renderDRE(){
     document.getElementById('dreNote').innerHTML=`<b>DRE gerencial · ${anoDe(MES)===2025?'base caixa (extrato)':'competência'} · ${mesLongo(MES)}.</b> A DRE de ${MLL[+MES]} ainda não foi fechada — o mês entra no painel apenas no <b>regime de caixa</b>. Troque para <b>Fluxo de caixa</b> no seletor acima. A coluna Total da DRE vai até ${MLL[+MD()[MD().length-1]]}.`;return;}
   b.closest('table').classList.remove('hide');document.getElementById('dreMatrix').innerHTML='';
   const C=dreCascade(MES);const pre='dcs';let H='';avSet(C.receita);avSetM(null);
-  const mg=v=>C.rl>0?` <span class="mg">${(v/C.rl*100).toFixed(1)}% RL</span>`:'';
+  const mg=v=>C.rl>0?` <span class="mg">${(v/C.rl*100).toFixed(1).replace('.',',')}% RL</span>`:'';
   const sub=(l,v,m)=>`<tr class="x-sub"><td>${l}${m||''}</td><td class="v ${NC(v)}">${fmt(v)}</td>${avTd(v)}</tr>`;
   H+=compRow(pre,'receita','Receita bruta',C.B.receita&&C.B.receita.cats,2);
   H+=compRow(pre,'deducoes','(–) Deduções — impostos, devoluções e taxa de cartão',C.B.deducoes&&C.B.deducoes.cats,2);
