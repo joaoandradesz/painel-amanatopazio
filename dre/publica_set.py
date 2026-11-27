@@ -56,12 +56,15 @@ MAN={
   # consolida.py impede que se some com a "Receita de Hospedagem (Amana)".
   "Hospedagem":(None,("1. Lucro Bruto","01. Receita Líquida Operacional","01. Receita Bruta de Vendas")),
   "Serviços Extras - Op/Custos":(None,("1. Lucro Bruto","21. Custos","06. Prestação de serviços operacionais")),
-  # regra revisada em out/2026: aluguel de veiculo e arrendamento
-  "Arrendamento de veículos":(None,("1. Lucro Bruto","21. Custos","01. Arrendamento")),
+  # Tiago, 27/11/2026: o grupo Arrendamento fica so com o arrendamento da pousada; o
+  # carro e UMA linha ("Aluguel de veículos", a 2.04.84) como sublinha de Custos diversos.
+  # A 2.04.97 foi esvaziada no Omie em 27/11; se voltar a aparecer, cai na mesma linha.
+  "Arrendamento de veículos":("Aluguel de veículos",("1. Lucro Bruto","21. Custos","14. Custos diversos")),
+  "Aluguel de veículos":(None,("1. Lucro Bruto","21. Custos","14. Custos diversos")),
  }}
 MAN={e:{nz(k):v for k,v in d.items()} for e,d in MAN.items()}
 # Variavel da Amana em out/2026 tinha saido em Pessoal; vai para a posicao do Omie
-FORCA={"amana":{nz("Variável")}}
+FORCA={"amana":{nz("Variável")},"topazio":{nz("Aluguel de veículos"),nz("Arrendamento de veículos")}}
 
 # ---------- buckets: a mesma classificacao do dbucket() da pagina ----------
 RE_NAOOP=re.compile(r"pagamento indevido|devolu[çc][aã]o de pagamento indevido|^reembolsos?$|^reembolso$|empr[ée]stimos? e financiamentos?|tarifas? banc[áa]ria",re.I)
