@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Retificacao de agosto/2026: a NFS-e 129 e a hospedagem sem nota.
 
-   *** NAO RODAR ANTES DO FECHAMENTO DE DEZEMBRO/2026. ***
-   Decisao do Joao em 27/10/2026: agosto ja foi entregue duas vezes e nao sera
-   retificado uma terceira. Os R$ 15.630,20 ficam segurados ate o relatorio de
-   dezembro fechado. Ver dre/PENDENCIA_AGOSTO_2026.md.
+   27/10/2026: segurado ate dezembro. 27/11/2026: o Joao mandou aplicar ja
+   ("aproveite pra ajustar aqueles 15k"). Acumulados T/TT agora sao refeitos
+   a partir dos meses (antes eram somados a mao).
 
 
 Dois pontos, os dois achados na conferencia contra a relacao de faturamento da
@@ -31,7 +30,10 @@ arredondamento deles nas mesmas 74 notas.
 import json,os,sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from consolida import carrega
-PAINEL=os.path.expanduser("~/painel-amanatopazio/")
+_p=os.path.join(os.path.dirname(os.path.abspath(__file__)),"publica_set.py")
+_g={"__file__":_p}; exec(open(_p,encoding="utf-8").read().rsplit("\nmain()",1)[0],_g)
+kpis,soma_em,ordena,cats_do_mes=_g["kpis"],_g["soma_em"],_g["ordena"],_g["cats_do_mes"]
+PAINEL=os.environ.get("PAINEL",os.path.expanduser("~/painel-amanatopazio/")).rstrip("/")+"/"
 R2=lambda v: round((v or 0)+0.0,2)
 f=lambda v: format(R2(v),",.2f").replace(",","@").replace(".",",").replace("@",".")
 
@@ -64,37 +66,25 @@ for e,suf in (("amana",""),("consol"," (Amana)")):
     it.remove(alvo[0]); it.append(dict(ITEM129))
     tx[NOVA+suf]=[alvo[0]]
 
-    # a arvore acumulada e a soma dos meses -- mexeu no mes, mexe nos dois acumulados
-    for m in ("T","TT"):
-        cos=D["entities"][e]["dre"].get(m,{}).get(CAM[0],{}).get(CAM[1],{}).get(CAM[2])
-        if cos is None: continue
-        for y in cos:
-            if y["cat"]==HOSP+suf: y["v"]=R2(y["v"]+NF129-SEMNF)
-        cos.append({"cat":NOVA+suf,"v":SEMNF})
-        tm=D["entities"][e]["tx"].get(m)
-        if tm and HOSP+suf in tm:
-            al=[y for y in tm[HOSP+suf] if abs(y["v"]-SEMNF)<0.005 and not (y.get("nf") or "").strip()]
-            assert len(al)==1, "%s/%s: esperava 1 titulo de %.2f sem NFS-e"%(e,m,SEMNF)
-            tm[HOSP+suf].remove(al[0]); tm[HOSP+suf].append(dict(ITEM129))
-            tm[NOVA+suf]=[al[0]]
-
-    for m in ("8","T","TT"):
-        r=D["resumo"][e][m]
-        for k in ("rb","ebitda","res"): r[k]=R2(r[k]+NF129)
-    c=D["entities"][e].get("comp",{}).get("8")
-    if c:
-        for k in ("rb","rl","res_op","ebitda","res"):
-            if k in c: c[k]=R2(c[k]+NF129)
-        if c.get("rb"): c["margem"]=round(c["ebitda"]/c["rb"],2)
-    dr=D["entities"][e].get("dre_result",{})
-    if "8" in dr: dr["8"]=R2(dr["8"]+NF129)
+    # mes 8 e acumulados refeitos pela mesma regra do publica_set (kpis/soma_em)
+    E=D["entities"][e]; A=E["dre"]["8"]; old=D["resumo"][e].get("8") or {}
+    r,c=kpis(A,old.get("oc"),old.get("adr")); D["resumo"][e]["8"]=r; E["comp"]["8"]=c; E["dre_result"]["8"]=r["res"]
+    m26=[str(x) for x in D["anos"]["2026"]["meses"]]; m25=[str(x) for x in D["anos"]["2025"]["meses"]]
+    for T,meses in (("T",m26),("TT",m26+m25)):
+        arv={}; txa={}
+        for m in meses:
+            Am=E["dre"].get(m) or {}; soma_em(arv,Am); Xm=(E.get("tx") or {}).get(m) or {}
+            for cat in cats_do_mes(Am):
+                if cat in Xm: txa.setdefault(cat,[]).extend(Xm[cat])
+        ordena(arv); E["dre"][T]=arv; E["tx"][T]=txa
+        old=D["resumo"][e].get(T) or {}; rt,ct=kpis(arv,old.get("oc"),old.get("adr"))
+        D["resumo"][e][T]=rt; E["comp"][T]=ct; E["dre_result"][T]=rt["res"]
 
     cos,x=linha(e,HOSP+suf)
     print("  %-7s hospedagem ago: %14s   nova linha: %10s   rb do mes: %14s"%(
         e,f(x["v"]),f(SEMNF),f(D["resumo"][e]["8"]["rb"])))
 
 assert abs(D["entities"]["amana"]["dre"]["8"][CAM[0]][CAM[1]][CAM[2]][0]["v"]-750504.84)<0.01
-D["gerado_em"]="27/10/2026"
 
 if os.environ.get("GRAVA"):
     blob=json.dumps(D,ensure_ascii=False)
